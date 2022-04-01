@@ -10,15 +10,15 @@ data <- fishers
 
 raster_resol <- 100
 loc.err <- 30
-conts <- 0.999
+conts <- c(0.5,0.9)
 ext <- 1.5
 mapext <- 0.5
 
-rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999, ext=1.5)
+rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999, ext=1.5) ## depending on the data, having pixels of 10Km does not work, I was getting an error, and it took me a while to figure out that it was the raster pixel size which was causing it (I only had 8pixels in total)
 {
   Sys.setenv(tz="UTC")
 
-  cnts <- as.numeric(trimws(strsplit(as.character(conts),",")[[1]]))
+  cnts <- as.numeric(trimws(strsplit(as.character(conts),",")[[1]])) ## what does this do?
   
   # need to project data on flat surface for BBMM
   # ex <- extent(data)
@@ -58,17 +58,17 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999, ext=1.5)
   data_dBBMM_avg_UD <- as(data_dBBMM_avg,".UD") # now raster is of class .UD
   data_dBBMM_avg_UDVol <- getVolumeUD(data_dBBMM_avg_UD)
   
-  #plot(data_dBBMM_avg_UD)
-  #contour(data_dBBMM_avg_UDVol,levels=c(0.5,0.95,0.999999))
-  #sum(values(data_dBBMM_avg_UDVol)) #area in km^2
-  
+  # plot(data_dBBMM_avg_UD)
+  # contour(data_dBBMM_avg_UDVol,levels=c(0.5,0.95,0.999999))
+  # sum(values(data_dBBMM_avg_UDVol)) #area in km^2
+
   data_tt <- spTransform(data_t, CRSobj = "+proj=longlat +datum=WGS84")
   
   data_dBBMM_avg_UDVol_t <- projectRaster(data_dBBMM_avg_UDVol,crs="+proj=longlat +datum=WGS84")
   xyz <- rasterToPoints(data_dBBMM_avg_UDVol_t)
   xyz_df <- data.frame(xyz)
   
-  map1 <- get_map(bbox(extent(data_tt)+c(-mapext,mapext,-mapext,mapext))) ## maybe allow for changes in this extent to...?
+  map1 <- get_map(bbox(extent(data_tt)+c(-mapext,mapext,-mapext,mapext))) ## maybe allow for changes in this extent to
   
   mapF <- ggmap(map1) +
     #geom_point(data=as.data.frame(data_tt),aes(x=location_long,y=location_lat,group=trackId),colour="red") +
@@ -76,7 +76,7 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999, ext=1.5)
     geom_contour(data=xyz_df,aes(x,y,z=layer),breaks=c(0.999),colour="red")
   
   #this does not work somehow - ggplot probably -- with ggplot one has to use "print"
-  png(file=paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"),"dynBBMM_ContourMap.png"),res=300,height=2000,width=2000)
+  png(file=paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"),"dynBBMM_ContourMap.png"),res=300,height=2000,width=2000) ## so actually what the map is showing is the UD, which is something different to the dynBBMM
   print(mapF)
   dev.off()
   
