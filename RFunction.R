@@ -5,21 +5,36 @@ library('rgdal')
 library('ggmap')
 library('OpenStreetMap')
 
-rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999)
+data("fishers")
+data <- fishers
+
+raster_resol <- 100
+loc.err <- 30
+conts <- 0.999
+ext <- 1.5
+mapext <- 0.5
+
+rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999, ext=1.5)
 {
   Sys.setenv(tz="UTC")
 
   cnts <- as.numeric(trimws(strsplit(as.character(conts),",")[[1]]))
   
   # need to project data on flat surface for BBMM
-  ex <- extent(data)
-  midlon <- median(coordinates(data)[,1],na.rm=TRUE)
-  midlat <- median(coordinates(data)[,2],na.rm=TRUE)
+  # ex <- extent(data)
+  # midlon <- median(coordinates(data)[,1],na.rm=TRUE)
+  # midlat <- median(coordinates(data)[,2],na.rm=TRUE)
+  # 
+  # data_t <- spTransform(data, CRSobj = paste0("+proj=aeqd +lat_0=",midlat," +lon_0=",midlon," +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs"))
   
-  data_t <- spTransform(data, CRSobj = paste0("+proj=aeqd +lat_0=",midlat," +lon_0=",midlon," +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs"))
+  data_t <- spTransform(data, center=T) ## this does the same as the above
   
-  Ra <- raster(extent(data_t)*1.5,resolution=raster_resol,crs = paste0("+proj=aeqd +lat_0=",midlat," +lon_0=",midlon," +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs"), vals=NULL)
-  data_resol <- mean(unlist(timeLag(data,units="mins")),na.rm=TRUE)
+   
+  # Ra <- raster(extent(data_t)*ext,resolution=raster_resol,crs = paste0("+proj=aeqd +lat_0=",midlat," +lon_0=",midlon," +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs"), vals=NULL)
+  # data_resol <- mean(unlist(timeLag(data,units="mins")),na.rm=TRUE)
+  
+  Ra <- raster(extent(data_t)*ext, resolution=raster_resol, crs = crs(data_t) , vals=NULL) ## provide the option to vary the amount the area gets enlarged, as the error "Lower x grid not large enough, consider extending the raster in that direction or enlarging the ext argument" is a pretty common error that the raster is not large enough in some direction
+  data_resol <- median(unlist(timeLag(data,units="mins")),na.rm=TRUE) ## better use median, as large gaps in the data will pull the mean away from the "most common fix interval"
   
   data_t_dBBMM <- brownian.bridge.dyn(data_t, raster = Ra,  window.size = 31, margin=11, time.step = data_resol/15, location.error = loc.err)
   
@@ -53,16 +68,16 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999)
   xyz <- rasterToPoints(data_dBBMM_avg_UDVol_t)
   xyz_df <- data.frame(xyz)
   
-  map1 <- get_map(bbox(extent(data_tt)+c(-1.5,1.5,-1.5,1.5)))
+  map1 <- get_map(bbox(extent(data_tt)+c(-mapext,mapext,-mapext,mapext))) ## maybe allow for changes in this extent to...?
   
   mapF <- ggmap(map1) +
     #geom_point(data=as.data.frame(data_tt),aes(x=location_long,y=location_lat,group=trackId),colour="red") +
     geom_contour_filled(data=xyz_df,aes(x,y,z=layer),breaks=cnts,alpha=0.8) + #,show.legend=FALSE
     geom_contour(data=xyz_df,aes(x,y,z=layer),breaks=c(0.999),colour="red")
   
-  #this does not work somehow - ggplot probably
+  #this does not work somehow - ggplot probably -- with ggplot one has to use "print"
   png(file=paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"),"dynBBMM_ContourMap.png"),res=300,height=2000,width=2000)
-  mapF
+  print(mapF)
   dev.off()
   
   result <- data
