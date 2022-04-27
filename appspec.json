@@ -1,0 +1,99 @@
+{
+  "settings": [
+	{
+      "id": "raster_resol",
+      "name": "Spatial Resolution for the Utilisation Distribution Raster",
+      "description": "Insert a numeric value to define the grid size of the raster in which the Utilisation Distribution shall be estimated by the model. Unit is metre (m). Default is  1000 m = 1 km, which might be too small for large scale studies.",
+      "defaultValue": 1000,
+      "type": "DOUBLE"
+    },
+	{
+      "id": "loc.err",
+      "name": "Estimated location error",
+      "description": "Insert a numeric value to specify the locaiton error that your data might have. The unit is metre (m). Defaults to 30 m.",
+      "defaultValue": 30,
+      "type": "DOUBLE"
+    },
+	{
+      "id": "conts",
+      "name": "Contour percentages",
+      "description": "Insert the contour percentages that you want calculated and mapped, i.e. the probability that a random animal of the tracked species is found in the estimated area(s) during the considered time period. Possible values above 0 and below 1. Defaults to 0.999.",
+      "defaultValue": "0.999",
+      "type": "STRING"
+    },
+	{
+      "id": "ext",
+      "name": "Map extent",
+      "description": "Insert a numeric value to specify by which multiplicative factor the map extent around your tracks shall be increased for calculating the Utilisation Distribution. If you encounter an error that the area is too small, please increase this value. The number must be above 1. Defaults to 1.5.",
+      "defaultValue": 1.5,
+      "type": "DOUBLE"
+    }	
+  ],
+  "dependencies": {
+    "R": [
+      {
+        "name": "move"
+      },
+	  {
+        "name": "raster"
+      },
+	  {
+        "name": "sp"
+      },
+	  {
+        "name": "rgdal"
+      },
+	  {
+        "name": "ggmap"
+      },
+	  {
+        "name": "OpenStreetMap"
+      }
+    ]
+  },
+  "createsArtifacts": true,
+  "license": {
+    "key": "MIT"
+  },
+  "language": "eng",
+  "keywords": [
+    "Brownian Bridge",
+    "dynamic Brownian Bridge",
+	"BBMM",
+	"dBBMM",
+	"Utilisation Distribution"
+  ],
+  "people": [
+    {
+     "firstName": "Andrea",
+      "middleInitials": null,
+      "lastName": "Kölzsch",
+      "email": "akoelzsch@ab.mpg.de",
+      "roles": [
+        "author",
+        "creator"
+      ],
+      "orcid": "0000-0003-0193-1563",
+      "affiliation": "Max-Planck-Institute of Animal Behavior",
+      "affiliationRor": "https://ror.org/026stee22"
+    },
+	{
+      "firstName": "Anne",
+      "middleInitials": "K",
+      "lastName": "Scharf",
+      "email": "ascharf@ab.mpg.de",
+      "roles": ["author"],
+      "orcid": "0000-0002-3357-8533",
+      "affiliation": "Max-Planck-Institute of Animal Behavior",
+      "affiliationRor": "https://ror.org/026stee22"
+    }
+  ],
+  "references": {
+	"type": "IsDescribedBy"
+    "note": "Kranstauber, B., Kays, R., LaPoint, S. D., Wikelski, M., & Safi, K. (2012). A dynamic Brownian bridge movement model to estimate utilization distributions for heterogeneous animal movement. Journal of Animal Ecology, 81(4), 738-746.",
+    "url": "https://doi.org/10.1111/j.1365-2656.2012.01955.x" 
+  },
+  "documentation": {
+    "url": "https://github.com/movestore/dynBrownianBridge/blob/main/README.md"
+  }
+}
