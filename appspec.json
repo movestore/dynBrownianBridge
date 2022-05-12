@@ -2,9 +2,9 @@
   "settings": [
 	{
       "id": "raster_resol",
-      "name": "Spatial Resolution for the Utilisation Distribution Raster",
-      "description": "Insert a numeric value to define the grid size of the raster in which the Utilisation Distribution shall be estimated by the model. Unit is metre (m). Default is  1000 m = 1 km, which might be too small for large scale studies.",
-      "defaultValue": 1000,
+      "name": "Spatial Resolution for the Utilisation/Occurance Distribution Raster",
+      "description": "Insert a numeric value to define the grid size of the raster in which the Utilisation/Occurance Distribution shall be estimated by the model. Unit is metre (m). Default is  10000 m = 10 km, which might be too large for smaller scale studies. Note that computation duration increases much with smaller grid sizes and can lead to the necessity of extending your area (see Map extent variable below).",
+      "defaultValue": 10000,
       "type": "DOUBLE"
     },
 	{
@@ -24,7 +24,7 @@
 	{
       "id": "ext",
       "name": "Map extent",
-      "description": "Insert a numeric value to specify by which multiplicative factor the map extent around your tracks shall be increased for calculating the Utilisation Distribution. If you encounter an error that the area is too small, please increase this value. The number must be above 1. Defaults to 1.5.",
+      "description": "Insert a numeric value to specify by which multiplicative factor the map extent around your tracks shall be increased for calculating the Utilisation/Occurance Distribution. If you encounter an error that the area is too small, please increase this value. The number must be above 1. Defaults to 1.5.",
       "defaultValue": 1.5,
       "type": "DOUBLE"
     }	

@@ -7,7 +7,7 @@ Github repository: *github.com/movestore/dynBrownianBridge*
 Estimates a utilisation distribution of your tracked animals using the dynamic Brownian Bridge Movement Model. A map with (a) contour(s) is generated.
 
 ## Documentation
-Based on a user-defined grid size and extent, a raster is defined on top of the area of the input data tracks. Using the R-function brownian.bridge.dyn(), this App calculates the utilisation distributions (UD) of the individual tracks in this area that are then combined as UD Volumes across all tracks. These summed values represent the probabilities with which a random animal of the data set can be found in a the specific grid cell in the time frame. With user-specified contour percentages, minimum areas of these probabilities are visualised, a red outline of the 0.999 contour is added.
+Based on a user-defined grid size and extent, a raster is defined on top of the area of the input data tracks. Using the R-function brownian.bridge.dyn(), this App calculates the utilisation distributions (UD; =occurance distribution) of the individual tracks in this area that are then combined as UD Volumes across all tracks. These summed values represent the probabilities with which a random animal of the data set can be found in a the specific grid cell in the time frame. With user-specified contour percentages, minimum areas of these probabilities are visualised, a red outline of the 0.999 contour is added.
 
 Some parameters of the funtion brownian.bridge.dyn() are fixed, as they do not influence the results strongly (window.size=31, margin=11). The time step is used as `data_resol/15` and the location error has to be provided by the user (see below).
 

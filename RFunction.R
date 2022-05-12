@@ -5,10 +5,20 @@ library('rgdal')
 library('ggmap')
 library('OpenStreetMap')
 
-rFunction <- function(data,raster_resol=1000,loc.err=30,conts=0.999,ext=1.5)
+rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=1.5)
 {
   Sys.setenv(tz="UTC")
 
+  #indicate the area spanned by the data for the user
+  ix1 <- which(coordinates(data)[,1]==min(coordinates(data)[,1],na.rm=TRUE))
+  ix2 <- which(coordinates(data)[,1]==max(coordinates(data)[,1],na.rm=TRUE))
+  ix3 <- which(coordinates(data)[,2]==min(coordinates(data)[,2],na.rm=TRUE))
+  ix4 <- which(coordinates(data)[,2]==max(coordinates(data)[,2],na.rm=TRUE))
+  
+  londist <- round(pointDistance(coordinates(data)[c(ix1,ix2),],lonlat=TRUE)[2,1])
+  latdist <- round(pointDistance(coordinates(data)[c(ix3,ix4),],lonlat=TRUE)[2,1])
+  logger.info(paste("Your data set spans the maximum longitude distance:",londist,"m and maximum latitude distance:",latdist,"m. Please adapt your parameters accordingly."))
+  
   cnts <- as.numeric(trimws(strsplit(as.character(conts),",")[[1]])) #if more than one contour percentage given by user, this makes a vector our of the comma-separated string
   
   # need to project data on flat surface for BBMM
@@ -48,6 +58,7 @@ rFunction <- function(data,raster_resol=1000,loc.err=30,conts=0.999,ext=1.5)
   data_dBBMM_avg_UDVol_t <- projectRaster(data_dBBMM_avg_UDVol,crs="+proj=longlat +datum=WGS84")
   xyz <- rasterToPoints(data_dBBMM_avg_UDVol_t)
   xyz_df <- data.frame(xyz)
+  names(xyz_df)[3] <- "layer"
   
   map1 <- get_map(bbox(extent(data_tt)+c(-ext,ext,-ext,ext)))
   
