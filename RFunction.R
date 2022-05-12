@@ -5,7 +5,7 @@ library('rgdal')
 library('ggmap')
 library('OpenStreetMap')
 
-rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=1.5)
+rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000)
 {
   Sys.setenv(tz="UTC")
 
@@ -22,9 +22,9 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=1.5)
   cnts <- as.numeric(trimws(strsplit(as.character(conts),",")[[1]])) #if more than one contour percentage given by user, this makes a vector our of the comma-separated string
   
   # need to project data on flat surface for BBMM
-  data_t <- spTransform(data, center=TRUE)
+  data_t <- spTransform(data, center=TRUE) #aeqd in metre
   
-  Ra <- raster(extent(data_t)*ext, resolution=raster_resol, crs = crs(data_t) , vals=NULL) ## option to vary the amount the area gets enlarged, as the error "Lower x grid not large enough, consider extending the raster in that direction or enlarging the ext argument" is a pretty common error that the raster is not large enough in some direction
+  Ra <- raster(extent(data_t)+c(-ext,ext,-ext,ext), resolution=raster_resol, crs = crs(data_t) , vals=NULL) ## option to vary the amount the area gets enlarged, as the error "Lower x grid not large enough, consider extending the raster in that direction or enlarging the ext argument" is a pretty common error that the raster is not large enough in some direction
   data_resol <- median(unlist(timeLag(data,units="mins")),na.rm=TRUE)
   
   data_t_dBBMM <- brownian.bridge.dyn(data_t, raster = Ra,  window.size = 31, margin=11, time.step = data_resol/15, location.error = loc.err)
@@ -60,7 +60,7 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=1.5)
   xyz_df <- data.frame(xyz)
   names(xyz_df)[3] <- "layer"
   
-  map1 <- get_map(bbox(extent(data_tt)+c(-ext,ext,-ext,ext)))
+  map1 <- get_map(bbox(extent(data_dBBMM_avg_UDVol_t)))
   
   mapF <- ggmap(map1) +
     #geom_point(data=as.data.frame(data_tt),aes(x=location_long,y=location_lat,group=trackId),colour="red") +

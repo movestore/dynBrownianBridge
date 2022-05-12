@@ -24,8 +24,8 @@
 	{
       "id": "ext",
       "name": "Map extent",
-      "description": "Insert a numeric value to specify by which multiplicative factor the map extent around your tracks shall be increased for calculating the Utilisation/Occurance Distribution. If you encounter an error that the area is too small, please increase this value. The number must be above 1. Defaults to 1.5.",
-      "defaultValue": 1.5,
+      "description": "Insert a numeric value to specify by which additive value (distance in metre) the map extent around your tracks shall be extended for calculating the Utilisation/Occurance Distribution. If you encounter an error that the area is too small, please increase this value. The number should be above the extent of the data set. Unit = metre. Defaults to 20000 m = 20 km.",
+      "defaultValue": 20000,
       "type": "DOUBLE"
     }	
   ],

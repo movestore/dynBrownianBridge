@@ -23,13 +23,13 @@ moveStack in Movebank format
 `dynBBMM_ContourMap.png`: OpenStreetMap of your tracking area with the modelled utilisation probabilities as requested by the variable `conts`. A red outline of the 0.999 contour is added.
 
 ### Parameters 
-`raster_resol`: Resolution/grid size of the raster in which to estimate the utilisation distribution. Unit metre. Defaults to 1000 m.
+`raster_resol`: Resolution/grid size of the raster in which to estimate the utilisation distribution. Unit metre. Defaults to 10000 m = 10 km.
 
 `loc.err`: Location error that shall be used for the dynamic BBMM estimations. Usually related to the max. accepted inaccuracy of your tracking locations. Unit metre. Defaults to 30 m.
 
 `conts`: One or more contour percentages that you want calculated and plotted on the map. For multiple values please separate by comma. Needs to be between 0 and 1.
 
-`ext`: Multiplicative factor for enlarging the map area for the dynamic BBMM calculations, as is necessary for edge effects. This value needs to be larger than 1. Defaults to 1.5.
+`ext`: Additive value for enlarging the map area for the dynamic BBMM calculations into all four directiony evenly, as is necessary for edge effects. This value needs to be larger than data extent area. Unit metre. Defaults to 20000 m = 20 km.
 
 ### Null or error handling:
 **`raster_resol`**: The resolution of the model outcome should be sufficiently small for making out your areas of interest, but should also not be too small, as runtime of the App then increases strongly.
@@ -38,7 +38,7 @@ moveStack in Movebank format
 
 **`conts`**: If this value is not restricted between 0 and 1, you will get errors. Please do not use too many contours, as the map might get difficult to interpret then.
 
-**`ext`**: Select this value reasonably, accounting for the tracking area of your data. It will multiply with the area size. Depending on the size of your study, you might not see you tracks if this value is too large. However, if this value is too close to 1, an error will occur that your extent is not large enough for the calcualtions.
+**`ext`**: Select this value reasonably, accounting for the tracking area of your data. It will add to the area evenly on all four directions. Depending on the size of your study, you might not see you tracks if this value is too large. However, if this value is too small, an error will occur that your extent is not large enough for the calcualtions (this error is very common, simply increase this value).
 
 **Data:** The full input data set is returned for further use in a next App and cannot be empty.
 
