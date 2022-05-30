@@ -4,12 +4,14 @@ MoveApps
 Github repository: *github.com/movestore/dynBrownianBridge*
 
 ## Description
-Estimates a utilisation distribution of your tracked animals using the dynamic Brownian Bridge Movement Model. A map with (a) contour(s) is generated.
+Estimates a utilisation distribution of your tracked animals using the dynamic Brownian Bridge Movement Model. A map with (a) contour(s) is generated. Tip: Consider subsampling your data at first runs.
 
 ## Documentation
-Based on a user-defined grid size and extent, a raster is defined on top of the area of the input data tracks. Using the R-function brownian.bridge.dyn(), this App calculates the utilisation distributions (UD; =occurance distribution) of the individual tracks in this area that are then combined as UD Volumes across all tracks. These summed values represent the probabilities with which a random animal of the data set can be found in a the specific grid cell in the time frame. With user-specified contour percentages, minimum areas of these probabilities are visualised, a red outline of the 0.999 contour is added.
+Based on a user-defined grid size and extent, a raster is defined on top of the area of the input data tracks. Using the R-function brownian.bridge.dyn(), this App calculates the utilisation distributions (UD; =occurance distribution) of the individual tracks in this area that are then (a) analysed separaterly as UD Volumes by individual and (b) combined as UD Volumes across all tracks. These summed values represent the probabilities with which a random animal of the data set can be found in a the specific grid cell in the time frame. With user-specified contour percentages, minimum areas of these probabilities are visualised (by individual and of the combined data set), a red outline of the 0.999 contour is added.
 
 Some parameters of the funtion brownian.bridge.dyn() are fixed, as they do not influence the results strongly (window.size=31, margin=11). The time step is used as `data_resol/15` and the location error has to be provided by the user (see below).
+
+Consider subsampling your data at first runs. High resolution data lead to rather long run times.
 
 This App is strongly based on the dynamic Brownian Bridge model developed in this manuscript: Kranstauber, B., Kays, R., LaPoint, S. D., Wikelski, M., & Safi, K. (2012). A dynamic Brownian bridge movement model to estimate utilization distributions for heterogeneous animal movement. Journal of Animal Ecology, 81(4), 738-746.
 
@@ -21,6 +23,8 @@ moveStack in Movebank format
 
 ### Artefacts
 `dynBBMM_ContourMap.png`: OpenStreetMap of your tracking area with the modelled utilisation probabilities as requested by the variable `conts`. A red outline of the 0.999 contour is added.
+
+`dynBBMM_ContourMap_ID.png`: OpenStreetMap of your tracking area with the modelled utilisation probabilities for each individual track (`ID`, one map per track) as requested by the variable `conts`. A red outline of the 0.999 contour is added.
 
 ### Parameters 
 `raster_resol`: Resolution/grid size of the raster in which to estimate the utilisation distribution. Unit metre. Defaults to 10000 m = 10 km.

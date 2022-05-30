@@ -33,7 +33,7 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000)
 
   # combine all individual UDs into one
   data_t_dBBMM_split <- move::split(data_t_dBBMM)
-  id_areas <- numeric(length(data_t_dBBMM_split))
+  id_areas <- as.numeric(length(data_t_dBBMM_split))
   
   data_dBBMM_all <- data_t_dBBMM_split[[1]]
   id_areas[1] <- (sum(values(getVolumeUD(data_t_dBBMM_split[[1]]))))
@@ -70,6 +70,23 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000)
   png(file=paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"),"dynBBMM_ContourMap.png"),res=300,height=2000,width=2000)
   print(mapF)
   dev.off()
+  
+  #maps for single individuals
+  for (i in seq(along=data_t_dBBMM_split))
+  {
+    data_t_dBBMM_iUDVol <- getVolumeUD(as(data_t_dBBMM_split[[i]],".UD"))
+    xyz_df_i <- data.frame(rasterToPoints(projectRaster(data_t_dBBMM_iUDVol,crs="+proj=longlat +datum=WGS84")))
+    names(xyz_df_i)[3] <- "layer"
+    
+    map_i <- ggmap(map1) +
+      #geom_point(data=as.data.frame(data_tt),aes(x=location_long,y=location_lat,group=trackId),colour="red") +
+      geom_contour_filled(data=xyz_df_i,aes(x,y,z=layer),breaks=cnts,alpha=0.8) + #,show.legend=FALSE
+      geom_contour(data=xyz_df_i,aes(x,y,z=layer),breaks=c(0.999),colour="red")
+    
+    png(file=paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"),"dynBBMM_ContourMap_",names(data_t_dBBMM_split[[i]]),".png"),res=300,height=2000,width=2000)
+    print(map_i)
+    dev.off()
+  }
   
   result <- data
   return(result)
