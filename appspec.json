@@ -17,7 +17,7 @@
 	{
       "id": "conts",
       "name": "Contour percentages",
-      "description": "Insert the contour percentages that you want calculated and mapped, i.e. the probability that a random animal of the tracked species is found in the estimated area(s) during the considered time period. Possible values above 0 and below 1. Defaults to 0.999.",
+      "description": "Insert the contour percentages that you want calculated and mapped, i.e. the probability that a random animal of the tracked species is found in the estimated area(s) during the considered time period. Possible values above 0 and below 1. If you want more than one contour, enter them in descending order and seperate by comma. Emtpy central areas can be avoided by adding a zero at the end. Example: 0.999,0.9,0.75,0.5,0. Defaults to 0.999.",
       "defaultValue": "0.999",
       "type": "STRING"
     },
