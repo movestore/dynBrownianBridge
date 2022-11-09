@@ -27,7 +27,34 @@
       "description": "Insert a numeric value to specify by which additive value (distance in metre) the map extent around your tracks shall be extended for calculating the Utilisation/Occurance Distribution. If you encounter an error that the area is too small, please increase this value. The number should be above the extent of the data set, which is provided in the App's Logs after running, please have a look. Unit = metre. Defaults to 20000 m = 20 km.",
       "defaultValue": 20000,
       "type": "DOUBLE"
-    }	
+    },
+	{
+      "id": "colorBy",
+      "name": "Diferenciation by color in map with all individuals",
+      "description": "Select what should be identified by different colors:",
+      "type": "DROPDOWN",
+      "defaultValue":"trackID",
+      "options": [{
+      "value": "trackID",
+      "displayText": "By trackID"
+    },
+    {
+      "value": "contourLevel",
+      "displayText": "By contour level"
+    },
+    {
+      "value": "both",
+      "displayText": "By trackID and contour level"
+    }]
+    },
+    {
+  "id": "saveAsSHP",
+  "name": "Save as Shapefile",
+  "description": "",
+  "type": "CHECKBOX",
+  "defaultValue": true
+}
+    
   ],
   "dependencies": {
     "R": [
@@ -48,6 +75,9 @@
       },
 	  {
         "name": "OpenStreetMap"
+      },
+      {
+        "name": "ggspatial"
       }
     ]
   },
@@ -61,7 +91,8 @@
     "dynamic Brownian Bridge",
 	"BBMM",
 	"dBBMM",
-	"Utilisation Distribution"
+	"Utilisation Distribution",
+	"ocurrence distribution"
   ],
   "people": [
     {

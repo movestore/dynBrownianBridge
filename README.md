@@ -1,4 +1,4 @@
-# Dynamic Brownian Bridge
+# Utilisation Distribution
 MoveApps
 
 Github repository: *github.com/movestore/dynBrownianBridge*
@@ -7,9 +7,9 @@ Github repository: *github.com/movestore/dynBrownianBridge*
 Estimates a utilisation distribution of your tracked animals using the dynamic Brownian Bridge Movement Model. A map with (a) contour(s) is generated. Tip: Consider subsampling your data at first runs.
 
 ## Documentation
-Based on a user-defined grid size and extent, a raster is defined on top of the area of the input data tracks. Using the R-function brownian.bridge.dyn(), this App calculates the utilisation distributions (UD; =occurance distribution) of the individual tracks in this area that are then (a) analysed separaterly as UD Volumes by individual and (b) combined as UD Volumes across all tracks. These summed values represent the probabilities with which a random animal of the data set can be found in a the specific grid cell in the time frame. With user-specified contour percentages, minimum areas of these probabilities are visualised (by individual and of the combined data set), a red outline of the 0.999 contour is added.
+Based on a user-defined grid size and extent, a raster is defined on top of the area of the input data tracks. Using the R-function brownian.bridge.dyn() and getVolumeUD(), this App calculates the utilisation distributions (UD; =occurance distribution) per individual track. The results are displayed per individual in separate maps, and all individuals in one map. A table with the UD sizes in Km^2 per individual and chosen contur is returend. The contours can also be downloaded as shapefiles. With user-specified contour percentages, minimum areas of these probabilities are visualised.
 
-Some parameters of the funtion brownian.bridge.dyn() are fixed, as they do not influence the results strongly (window.size=31, margin=11). The time step is used as `data_resol/15` and the location error has to be provided by the user (see below).
+Some parameters of the funtion brownian.bridge.dyn() are fixed, as they do not influence the results strongly (window.size=31, margin=11). The time step is used as `median time lag/15` to prevent very long running times and the location error has to be provided by the user (see below).
 
 Consider subsampling your data at first runs. High resolution data lead to rather long run times.
 
@@ -34,6 +34,10 @@ moveStack in Movebank format
 `conts`: One or more contour percentages that you want calculated and plotted on the map. For multiple values please separate by comma. Needs to be between 0 and 1.
 
 `ext`: Additive value for enlarging the map area for the dynamic BBMM calculations into all four directiony evenly, as is necessary for edge effects. This value needs to be larger than data extent area. Unit metre. Defaults to 20000 m = 20 km.
+
+`colorBy`: The map displaying the UDs of all individuals can be colored by: `trackID`, `contour level` or  `trackID and contour level`. The defalt option is by trackID.
+
+`saveAsSHP`: the specified contours of the UDs can be saved as shapefiles. This option can also be unchecked.
 
 ### Null or error handling:
 **`raster_resol`**: The resolution of the model outcome should be sufficiently small for making out your areas of interest, but should also not be too small, as runtime of the App then increases strongly.
