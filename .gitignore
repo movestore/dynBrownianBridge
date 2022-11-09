@@ -2,7 +2,4 @@
 .Rhistory
 .RData
 .Ruserdata
-.rds
-.csv
-.png
-.pdf
+data/output
