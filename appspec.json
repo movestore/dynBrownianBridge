@@ -28,6 +28,13 @@
       "defaultValue": 20000,
       "type": "DOUBLE"
     },
+    {
+  "id": "ignoreTimeHrs",
+  "name": "Maximum time lag in hours",
+  "description": "Give maximum time lag in hours to be included in the calculations, for segments with larger time lags no estimation will be calculated. Decimals are allowed.",
+  "type": "DOUBLE",
+  "defaultValue": 24
+},
 	{
       "id": "colorBy",
       "name": "Diferenciation by color in map with all individuals",

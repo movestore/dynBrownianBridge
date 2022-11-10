@@ -4,7 +4,7 @@
 ## Provided testing datasets in `./data/raw`: 
 ## "input1_pigeons.rds", "input2_geese.rds", "input3_stork.rds", "input4_goat.rds"  
 ## for own data: file saved as a .rds containing a object of class MoveStack
-inputFileName = "./data/raw/input3_stork.rds" 
+inputFileName = "./data/raw/input4_goat.rds" 
 
 ## optionally change the output file name
 unlink("./data/output/", recursive = TRUE)
@@ -24,10 +24,11 @@ outputFileName = "./data/output/output.rds"
 
 args <- list()
 # Add all your arguments of your r-function here
-args[["raster_resol"]] = 10000
+args[["raster_resol"]] = 100
 args[["loc.err"]] = 30
 args[["conts"]] = 	"0.5,0.95,0.99"
-args[["ext"]] = 500000
+args[["ext"]] = 5000
+args[["ignoreTimeHrs"]] = 6 #10/60
 args[["colorBy"]] = "both"
 args[["saveAsSHP"]] = TRUE
 ##############################

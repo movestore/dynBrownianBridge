@@ -4,14 +4,15 @@ MoveApps
 Github repository: *github.com/movestore/dynBrownianBridge*
 
 ## Description
-Estimates a utilisation distribution of your tracked animals using the dynamic Brownian Bridge Movement Model. A map with (a) contour(s) is generated. Tip: Consider subsampling your data at first runs.
+Estimates a utilisation distribution of your tracked animals using the dynamic Brownian Bridge Movement Model. A map with (a) contour(s) is generated. Tip: Consider subsampling your data (e.g. use the app "Thin Data by Time") at first runs and if your data are collected at a very high frequency.
 
 ## Documentation
-Based on a user-defined grid size and extent, a raster is defined on top of the area of the input data tracks. Using the R-function brownian.bridge.dyn() and getVolumeUD(), this App calculates the utilisation distributions (UD; =occurance distribution) per individual track. The results are displayed per individual in separate maps, and all individuals in one map. A table with the UD sizes in Km^2 per individual and chosen contur is returend. The contours can also be downloaded as shapefiles. With user-specified contour percentages, minimum areas of these probabilities are visualised.
+Based on a user-defined grid size and extent, a raster is defined on top of the area of the input data tracks. Using the R-function brownian.bridge.dyn() and getVolumeUD(), this App calculates the utilisation distributions (UD; =occurance distribution) per individual track. The user-specified contours are displayed per individual in separate maps, and all individuals in one map. A table with the UD sizes in Km^2 per individual and specified contours is returned. The contours can also be downloaded as shapefiles.
 
-Some parameters of the funtion brownian.bridge.dyn() are fixed, as they do not influence the results strongly (window.size=31, margin=11). The time step is used as `median time lag/15` to prevent very long running times and the location error has to be provided by the user (see below).
+Some parameters of the function brownian.bridge.dyn() are fixed, as they do not influence the results strongly (window.size=31, margin=11). The time step is used as `median time lag/15` (with a minimum of 1 secs) to prevent very long running times. The location error has to be provided by the user (see below).
+Often tracking data can contain some large time gaps with missing data. During this period of time there is a higher uncertainty where the animal could have been, increasing drastically the area that the function needs to calculate the UD (because the animal could have been virtually anywhere). To prevent this from happening, the user can provide a maximum time lag (in hours) to be included in the calculations, for segments with larger time lags no estimation will be calculated. If very large time gaps are included, the result might just be one big "blob".
 
-Consider subsampling your data at first runs. High resolution data lead to rather long run times.
+Consider subsampling your data at first runs (e.g. use the app "Thin Data by Time"). High resolution data lead to rather long run times (for many species a time lag of 10-15mins is high enough).
 
 This App is strongly based on the dynamic Brownian Bridge model developed in this manuscript: Kranstauber, B., Kays, R., LaPoint, S. D., Wikelski, M., & Safi, K. (2012). A dynamic Brownian bridge movement model to estimate utilization distributions for heterogeneous animal movement. Journal of Animal Ecology, 81(4), 738-746.
 
@@ -22,9 +23,13 @@ moveStack in Movebank format
 moveStack in Movebank format
 
 ### Artefacts
-`dynBBMM_ContourMap.png`: OpenStreetMap of your tracking area with the modelled utilisation probabilities as requested by the variable `conts`. A red outline of the 0.999 contour is added.
+`UD_size_per_contour.csv`: table containing the UD size in Km^2 per contour and individual
 
-`dynBBMM_ContourMap_ID.png`: OpenStreetMap of your tracking area with the modelled utilisation probabilities for each individual track (`ID`, one map per track) as requested by the variable `conts`. A red outline of the 0.999 contour is added.
+`UD_contour:xx_xx_xx`: the shapefile of the contuors of all individuals
+
+`UD_ContourMap_color:xxxx_contours:xxx_xxx_xxx.png`: OpenStreetMap of your tracking area with the modelled utilisation probabilities as requested by the variable `conts`. The 0.999 contour is added for reference.
+
+`UD_ContourMap_per_Indv_contours:xxx_xxx_xx.pdf`: OpenStreetMap of your tracking area with the modelled utilisation probabilities for each individual track (`ID`, one map per track) as requested by the variable `conts`. The 0.999 contour is added for reference.
 
 ### Parameters 
 `raster_resol`: Resolution/grid size of the raster in which to estimate the utilisation distribution. Unit metre. Defaults to 10000 m = 10 km.
@@ -34,6 +39,8 @@ moveStack in Movebank format
 `conts`: One or more contour percentages that you want calculated and plotted on the map. For multiple values please separate by comma. Needs to be between 0 and 1.
 
 `ext`: Additive value for enlarging the map area for the dynamic BBMM calculations into all four directiony evenly, as is necessary for edge effects. This value needs to be larger than data extent area. Unit metre. Defaults to 20000 m = 20 km.
+
+`ignoreTimeHrs`: maximum time lag in hours to be included in the calculations, for segments with larger time lags no estimation will be calculated . Default is 24h.
 
 `colorBy`: The map displaying the UDs of all individuals can be colored by: `trackID`, `contour level` or  `trackID and contour level`. The defalt option is by trackID.
 
@@ -46,7 +53,9 @@ moveStack in Movebank format
 
 **`conts`**: If this value is not restricted between 0 and 1, you will get errors. Please do not use too many contours, as the map might get difficult to interpret then.
 
-**`ext`**: Select this value reasonably, accounting for the tracking area of your data. It will add to the area evenly on all four directions. Depending on the size of your study, you might not see you tracks if this value is too large. However, if this value is too small, an error will occur that your extent is not large enough for the calcualtions (this error is very common, simply increase this value).
+**`ext`**: Select this value reasonably, accounting for the tracking area of your data. It will add to the area evenly on all four directions. Depending on the size of your study, you might not see you tracks if this value is too large. However, if this value is too small, an error will occur that your extent is not large enough for the calculations (this error is very common, simply increase this value). If you get the error: "no contour lines", this value is to large.
+
+**`ignoreTimeHrs`**: A time lag that is at least double or triple of the scheduled fix rate is reasonable. It allows for some missed fixes, but excludes larger periods with missed fixes, turned of tag, malfunctioning of the tag, etc.
 
 **Data:** The full input data set is returned for further use in a next App and cannot be empty.
 
