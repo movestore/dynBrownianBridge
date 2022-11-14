@@ -27,7 +27,41 @@
       "description": "Insert a numeric value to specify by which additive value (distance in metre) the map extent around your tracks shall be extended for calculating the Utilisation/Occurance Distribution. If you encounter an error that the area is too small, please increase this value. The number should be above the extent of the data set, which is provided in the App's Logs after running, please have a look. Unit = metre. Defaults to 20000 m = 20 km.",
       "defaultValue": 20000,
       "type": "DOUBLE"
-    }	
+    },
+    {
+  "id": "ignoreTimeHrs",
+  "name": "Maximum time lag in hours",
+  "description": "Give maximum time lag in hours to be included in the calculations, for segments with larger time lags no estimation will be calculated. Decimals are allowed.",
+  "type": "DOUBLE",
+  "defaultValue": 24
+},
+	{
+      "id": "colorBy",
+      "name": "Diferenciation by color in map with all individuals",
+      "description": "Select what should be identified by different colors:",
+      "type": "DROPDOWN",
+      "defaultValue":"trackID",
+      "options": [{
+      "value": "trackID",
+      "displayText": "By trackID"
+    },
+    {
+      "value": "contourLevel",
+      "displayText": "By contour level"
+    },
+    {
+      "value": "both",
+      "displayText": "By trackID and contour level"
+    }]
+    },
+    {
+  "id": "saveAsSHP",
+  "name": "Save as Shapefile",
+  "description": "",
+  "type": "CHECKBOX",
+  "defaultValue": true
+}
+    
   ],
   "dependencies": {
     "R": [
@@ -48,6 +82,9 @@
       },
 	  {
         "name": "OpenStreetMap"
+      },
+      {
+        "name": "ggspatial"
       }
     ]
   },
@@ -61,7 +98,10 @@
     "dynamic Brownian Bridge",
 	"BBMM",
 	"dBBMM",
-	"Utilisation Distribution"
+	"Utilisation Distribution",
+	"Ocurrence distribution",
+	"UD",
+	"home range"
   ],
   "people": [
     {
