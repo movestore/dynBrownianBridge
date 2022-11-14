@@ -8,6 +8,7 @@ library('OpenStreetMap')
 library("ggspatial")
 # library("viridis")
 
+
 rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,ignoreTimeHrs=24, colorBy=c("trackID", "contourLevel", "both"), saveAsSHP=TRUE){
   Sys.setenv(tz="UTC")
   
@@ -25,7 +26,7 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   
   # cnts <- as.numeric(trimws(strsplit(as.character(conts),",")[[1]])) #if more than one contour percentage given by user, this makes a vector our of the comma-separated string ==> this was only keeping the 1st contour, at least in R. In moveapps it seems to work for some reason....
   cnts <- as.numeric(unlist(lapply(strsplit(as.character(conts),","),trimws))) ## fixed?
-  if(0.999%in%cnts){cnts}else{cnts <- c(cnts,0.999)} # NOT SURE IF TO EXCLUDE THIS. IF SOMEONE IS JUST INTEREST IN THE 0.25, AND THE 0.99 IS ALWAYS THERE (ALSO ZOOMING ALWAYS OUT TO THE ENTIRE TRACK) COULD BE ANNOYING....
+  # if(0.999%in%cnts){cnts}else{cnts <- c(cnts,0.999)} # NOT SURE IF TO EXCLUDE THIS. IF SOMEONE IS JUST INTEREST IN THE 0.25, AND THE 0.99 IS ALWAYS THERE (ALSO ZOOMING ALWAYS OUT TO THE ENTIRE TRACK) COULD BE ANNOYING....
   
   # need to project data on flat surface for BBMM
   data_t <- spTransform(data, center=TRUE) #aeqd in metre
@@ -49,7 +50,7 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
     UDsel <- data_t_UD<=ctr 
     UDsizem2 <- cellStats(UDsel, 'sum')*raster_resol*raster_resol
     UDsizeKm2 <- UDsizem2/1000000
-    df <- data.frame(track=names(data_t_UD), UD_size_Km2=UDsizeKm2, contour=ctr, row.names = NULL) # CHECK COLUMN NAMES
+    df <- data.frame(trackID=names(data_t_UD), UD_size_Km2=UDsizeKm2, contour=ctr, row.names = NULL) # add individualID and TrackID in the future?
     return(df)
   })
   UD_size_df <- do.call("rbind",UD_size_L)
@@ -59,7 +60,7 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   UD_sldf <- raster2contour(data_t_dBBMM, level=cnts)
   
   # changing ID names of the SLDF as the default ones cannot be interpreted
-  UD_sldf <-  spChFIDs(UD_sldf, as.character(paste0(UD_sldf$individual.local.identifier,"_",UD_sldf$level))) # CHECK WHAT HAPPENS IF trackId IS NOT THE SAME TO individual.local.identifer!!
+  UD_sldf <-  spChFIDs(UD_sldf, as.character(paste0(UD_sldf$individual.local.identifier,"_",UD_sldf$level))) 
   
   UD_sldf_t <- spTransform(UD_sldf,CRS("+proj=longlat"))
   
@@ -68,14 +69,17 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   
   # prepare SLDF for ggplot
   UD_sldf_fort <- ggplot2::fortify(UD_sldf_t)
-  UD_sldf_fort$track <- unlist(lapply(strsplit(UD_sldf_fort$id,"_"),function(x) {x[1]}))
-  UD_sldf_fort$contour <- unlist(lapply(strsplit(UD_sldf_fort$id,"_"),function(x) {x[2]}))
+  # UD_sldf_fort$track <- unlist(lapply(strsplit(UD_sldf_fort$id,"_"),function(x) {x[1]}))
+  # UD_sldf_fort$contour <- unlist(lapply(strsplit(UD_sldf_fort$id,"_"),function(x) {x[2]}))
+  
+  UD_sldf_fort$track <- unlist(lapply(strsplit(UD_sldf_fort$id,"_"),function(x) {paste0(x[1:length(x)-1], collapse="_")}))
+  UD_sldf_fort$contour <- unlist(lapply(strsplit(UD_sldf_fort$id,"_"),function(x) {x[length(x)]}))
   
   # map for all individuals
   data_df <- data.frame(coordinates(data))
   colnames(data_df) <- c("long","lat")
   data_df$indv <- trackId(data)
-  map1 <- get_map(bbox(extent(UD_sldf_t)*1.5))
+  map1 <- get_map(bbox(extent(UD_sldf_t)*1.5), source="stamen")
   
   mapF <- ggmap(map1) +
     geom_path(data=data_df, aes(x=long, y=lat, group=indv),alpha=0.2)+
@@ -91,7 +95,7 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   dev.off()
   
   # on map per indiv in 1 pdf
-  UD_sldf_fort_L <- split(UD_sldf_fort, UD_sldf_fort$track) # CHECK IF THESE STILL MATCH WHEN trackID AND indiv.local.identif ARE DIFFERENT !!!
+  UD_sldf_fort_L <- split(UD_sldf_fort, UD_sldf_fort$track)
   data_df_L <- split(data_df,data_df$indv)
   
   UD_sldf_t_L <- move::split(UD_sldf_t,UD_sldf_t$individual.local.identifier)
@@ -104,7 +108,7 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
     
     # map for all individuals
     Indv_data_df <- data_df[data_df$indv%in%unique(Indv_UD_sldf_fort$track),]
-    map1 <- get_map(bbox(extent(UDcontIndiv)*1.5))
+    map1 <- get_map(bbox(extent(UDcontIndiv)*1.5),source="stamen")
     
     mapF <- ggmap(map1) +
       geom_path(data=Indv_data_df, aes(x=long, y=lat),alpha=0.2)+

@@ -1,4 +1,4 @@
-# Utilisation Distribution
+# Utilisation Distribution (Dynamic Brownian Bridge)"
 MoveApps
 
 Github repository: *github.com/movestore/dynBrownianBridge*
@@ -27,9 +27,9 @@ moveStack in Movebank format
 
 `UD_contour:xx_xx_xx`: the shapefile of the contuors of all individuals
 
-`UD_ContourMap_color:xxxx_contours:xxx_xxx_xxx.png`: OpenStreetMap of your tracking area with the modelled utilisation probabilities as requested by the variable `conts`. The 0.999 contour is added for reference.
+`UD_ContourMap_color:xxxx_contours:xxx_xxx_xxx.png`: OpenStreetMap of your tracking area with the modelled utilisation probabilities as requested by the variable `conts`.
 
-`UD_ContourMap_per_Indv_contours:xxx_xxx_xx.pdf`: OpenStreetMap of your tracking area with the modelled utilisation probabilities for each individual track (`ID`, one map per track) as requested by the variable `conts`. The 0.999 contour is added for reference.
+`UD_ContourMap_per_Indv_contours:xxx_xxx_xx.pdf`: OpenStreetMap of your tracking area with the modelled utilisation probabilities for each individual track (`ID`, one map per track) as requested by the variable `conts`.
 
 ### Parameters 
 `raster_resol`: Resolution/grid size of the raster in which to estimate the utilisation distribution. Unit metre. Defaults to 10000 m = 10 km.
@@ -55,7 +55,7 @@ moveStack in Movebank format
 
 **`ext`**: Select this value reasonably, accounting for the tracking area of your data. It will add to the area evenly on all four directions. Depending on the size of your study, you might not see you tracks if this value is too large. However, if this value is too small, an error will occur that your extent is not large enough for the calculations (this error is very common, simply increase this value). If you get the error: "no contour lines", this value is to large.
 
-**`ignoreTimeHrs`**: A time lag that is at least double or triple of the scheduled fix rate is reasonable. It allows for some missed fixes, but excludes larger periods with missed fixes, turned of tag, malfunctioning of the tag, etc.
+**`ignoreTimeHrs`**: A time lag that is at least double or triple of the scheduled fix rate is reasonable. It allows for some missed fixes, but excludes larger periods with missed fixes, turned of tag, malfunctioning of the tag, etc. If very large time gaps are included, the result might just be one big "blob".
 
 **Data:** The full input data set is returned for further use in a next App and cannot be empty.
 
