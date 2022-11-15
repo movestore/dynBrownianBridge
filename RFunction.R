@@ -157,7 +157,7 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   mapFavg <- ggmap(map1avg) +
     geom_path(data=data_df, aes(x=long, y=lat, group=indv),alpha=0.2)+
     geom_point(data=data_df, aes(x=long, y=lat, group=indv),alpha=0.1, shape=20)+
-    ggspatial::geom_spatial_path(data = UD_sldf_fort_avg, aes(long,lat, group=group, color=if(colorBy=="trackID"){track}else if(colorBy=="contourLevel"){contour}else if(colorBy=="both"){id}))+ #,size=1
+    ggspatial::geom_spatial_path(data = UD_sldf_fort_avg, aes(long,lat, group=group, color=id))+ #,size=1
     scale_colour_manual("",values = rainbow(length(unique(UD_sldf_fort$id))))
   
   png(file=paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"),"Avg_UD_ContourMap","_contours:",paste0(cnts,collapse="_"),".png"),res=300,height=2000,width=2000) 
@@ -173,7 +173,7 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
     mapFavg <- ggmap(map1avg) +
       geom_path(data=data_df, aes(x=long, y=lat, group=indv),alpha=0.2)+
       geom_point(data=data_df, aes(x=long, y=lat, group=indv),alpha=0.1, shape=20)+
-      ggspatial::geom_spatial_path(data = avgCont, aes(long,lat, group=group, color=if(colorBy=="trackID"){track}else if(colorBy=="contourLevel"){contour}else if(colorBy=="both"){id}))+ #,size=1
+      ggspatial::geom_spatial_path(data = avgCont, aes(long,lat, group=group, color=id))+ #,size=1
       scale_colour_manual("",values = rainbow(length(unique(UD_sldf_fort$id))))
     print(mapFavg) 
   })
