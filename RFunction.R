@@ -45,15 +45,21 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   # get UDs for all
   data_t_UD <- getVolumeUD(data_t_dBBMM) 
   
+  # AK: calculate average UD for all tracks together ("population average")
+  data_t_UD_av <- stackApply(data_t_UD,indices=rep(1,dim(data_t_UD)[3]),fun="mean") #the values here seem quite high, do you think this is correct?
+  data_t_UD_pav <- stack(data_t_UD,data_t_UD_av) #add the average raster layer to the indiv UDs, then can run this through your lapply for the UD sizes..
+  names(data_t_UD_pav)[dim(data_t_UD)[3]+1] <- "average"
+  
   # get UD size in Km2 per contour
+  # AK: adapted here data_t_UD to data_t_UD_pav, so that also the contour sizes of the average UD is in
   UD_size_L <- lapply(cnts, function(ctr){
-    UDsel <- data_t_UD<=ctr 
+    UDsel <- data_t_UD_pav<=ctr 
     UDsizem2 <- cellStats(UDsel, 'sum')*raster_resol*raster_resol
     UDsizeKm2 <- UDsizem2/1000000
-    df <- data.frame(trackID=names(data_t_UD), UD_size_Km2=UDsizeKm2, contour=ctr, row.names = NULL) # add individualID and TrackID in the future?
+    df <- data.frame(trackID=names(data_t_UD_pav), UD_size_Km2=UDsizeKm2, contour=ctr, row.names = NULL) # add individualID and TrackID in the future?
     return(df)
   })
-  UD_size_df <- do.call("rbind",UD_size_L)
+  UD_size_df <- do.call("rbind",UD_size_L) #what does this give? the sizes of all contours for each track?
   write.csv(UD_size_df, row.names=F, file = paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"),"UD_size_per_contour.csv"))
   
   # get contours into a SLDF object
@@ -94,7 +100,7 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   print(mapF)
   dev.off()
   
-  # on map per indiv in 1 pdf
+  # one map per indiv in 1 pdf
   UD_sldf_fort_L <- split(UD_sldf_fort, UD_sldf_fort$track)
   data_df_L <- split(data_df,data_df$indv)
   
@@ -121,6 +127,11 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
     print(mapF) 
   })
   dev.off()
+  
+  # AK: map with average contours
+  
+  
+  
   
   return(data)
 }
