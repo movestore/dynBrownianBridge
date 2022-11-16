@@ -54,9 +54,8 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   data_t_UD <- getVolumeUD(data_t_dBBMM) 
   
   # AK: calculate average UD for all tracks together ("population average")
-  data_t_UD_av <- stackApply(data_t_UD,indices=rep(1,dim(data_t_UD)[3]),fun="mean") #the values here seem quite high, do you think this is correct?
-  ## this seems to make sense, and also table of UD sizes make sense
-  # plot(data_t_UD_av); contour(data_t_UD_av2, level=0.99, add=T)
+  data_t_UD_av <- stackApply(data_t_UD,indices=rep(1,dim(data_t_UD)[3]),fun="mean") # this seems to make sense, and also table of UD sizes make sense
+  # plot(data_t_UD_av); contour(data_t_UD_av, level=0.99, add=T)
   data_t_UD_pav <- stack(data_t_UD,data_t_UD_av) #add the average raster layer to the indiv UDs, then can run this through your lapply for the UD sizes..
   names(data_t_UD_pav)[dim(data_t_UD)[3]+1] <- "average"
   
@@ -76,9 +75,8 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   UD_sldf <- raster2contour(data_t_dBBMM, level=cnts)
   
   # get contours into a SLDF object of avg layer
-  avgUD <- data_t_UD_pav[["average"]]
   avg_sldf_L <- lapply(cnts, function(ctr){
-    rasterToContour(avgUD, levels=ctr)
+    rasterToContour(data_t_UD_av, levels=ctr)
   })
   avg_sldf <- do.call("rbind",avg_sldf_L)
   avg_sldf$individual.local.identifier <- "average"
@@ -94,7 +92,7 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   if(saveAsSHP){writeOGR(UD_sldf_t, dsn=paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/")), layer=paste0("UD_contour:",paste0(cnts,collapse="_")), driver="ESRI Shapefile", overwrite_layer=TRUE)}
   
   # prepare SLDF for ggplot
-  UD_sldf_fort <- ggplot2::fortify(UD_sldf_t[!UD_sldf_t$individual.local.identifier=="average",])
+  UD_sldf_fort <- ggplot2::fortify(UD_sldf_t[!UD_sldf_t$individual.local.identifier=="average",]) #for stack of individual plots leave out average
   UD_sldf_fort$track <- unlist(lapply(strsplit(UD_sldf_fort$id,"_"),function(x) {paste0(x[1:length(x)-1], collapse="_")}))
   UD_sldf_fort$contour <- unlist(lapply(strsplit(UD_sldf_fort$id,"_"),function(x) {x[length(x)]}))
   
@@ -113,14 +111,14 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   # labs(x="",y="")+
   # theme(axis.text=element_blank(),axis.ticks=element_blank())
   
-  png(file=paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"),"UD_ContourMap_color:",colorBy,"_contours:",paste0(cnts,collapse="_"),".png"),res=300,height=2000,width=2000) 
+  png(file=paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"),"UD_ContourMap_color_",colorBy,"_contours_",paste0(cnts,collapse="_"),".png"),res=300,height=2000,width=2000) 
   print(mapF)
   dev.off()
   
-  # one map per indiv in 1 pdf
+  # one map per indiv in 1 pdf, incl. map of average
   UD_sldf_t_L <- move::split(UD_sldf_t,UD_sldf_t$individual.local.identifier)
   
-  pdf(paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"), "UD_ContourMap_per_Indv","_contours:",paste0(cnts,collapse="_"),".pdf")) 
+  pdf(paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"), "UD_ContourMap_per_Indv","_contours_",paste0(cnts,collapse="_"),".pdf")) 
   lapply(UD_sldf_t_L, function(UDcontIndiv){
     Indv_UD_sldf_fort <- ggplot2::fortify(UDcontIndiv)
     Indv_UD_sldf_fort$track <- unlist(lapply(strsplit(Indv_UD_sldf_fort$id,"_"),function(x) {x[1]}))
@@ -159,27 +157,26 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
     geom_point(data=data_df, aes(x=long, y=lat, group=indv),alpha=0.1, shape=20)+
     ggspatial::geom_spatial_path(data = UD_sldf_fort_avg, aes(long,lat, group=group, color=id))+ #,size=1
     scale_colour_manual("",values = rainbow(length(unique(UD_sldf_fort$id))))
-  
-  png(file=paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"),"Avg_UD_ContourMap","_contours:",paste0(cnts,collapse="_"),".png"),res=300,height=2000,width=2000) 
+
+  png(file=paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"),"Avg_UD_ContourMap","_contours_",paste0(cnts,collapse="_"),".png"),res=300,height=2000,width=2000) 
   print(mapFavg)
   dev.off()
   ## option1
 
   ## OPTION 2: each levels in a separate plot 
-  UD_sldf_fort_L <- split(UD_sldf_fort_avg, UD_sldf_fort_avg$id)
-  pdf(paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"), "Avg_UD_ContourMap2","_contours:",paste0(cnts,collapse="_"),".pdf")) 
-  lapply(UD_sldf_fort_L, function(avgCont){
+  #UD_sldf_fort_L <- split(UD_sldf_fort_avg, UD_sldf_fort_avg$id)
+  #pdf(paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"), "Avg_UD_ContourMap2","_contours_",paste0(cnts,collapse="_"),".pdf")) 
+  #lapply(UD_sldf_fort_L, function(avgCont){
   
-    mapFavg <- ggmap(map1avg) +
-      geom_path(data=data_df, aes(x=long, y=lat, group=indv),alpha=0.2)+
-      geom_point(data=data_df, aes(x=long, y=lat, group=indv),alpha=0.1, shape=20)+
-      ggspatial::geom_spatial_path(data = avgCont, aes(long,lat, group=group, color=id))+ #,size=1
-      scale_colour_manual("",values = rainbow(length(unique(UD_sldf_fort$id))))
-    print(mapFavg) 
-  })
-  dev.off()
+  #  mapFavg <- ggmap(map1avg) +
+  #    geom_path(data=data_df, aes(x=long, y=lat, group=indv),alpha=0.2)+
+  #    geom_point(data=data_df, aes(x=long, y=lat, group=indv),alpha=0.1, shape=20)+
+  #    ggspatial::geom_spatial_path(data = avgCont, aes(long,lat, group=group, color=id))+ #,size=1
+  #    scale_colour_manual("",values = rainbow(length(unique(UD_sldf_fort$id))))
+  #  print(mapFavg) 
+  #})
+  #dev.off()
   ## option2
-  
   
   return(data)
 }

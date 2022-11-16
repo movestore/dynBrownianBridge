@@ -31,7 +31,7 @@
     {
   "id": "ignoreTimeHrs",
   "name": "Maximum time lag in hours",
-  "description": "Give maximum time lag in hours to be included in the calculations, for segments with larger time lags no estimation will be calculated. Decimals are allowed.",
+  "description": "Give maximum time lag in hours to be included in the calculations. For segments with larger time lags no estimation will be calculated. Decimals are allowed.",
   "type": "DOUBLE",
   "defaultValue": 24
 },
@@ -57,7 +57,7 @@
     {
   "id": "saveAsSHP",
   "name": "Save as Shapefile",
-  "description": "",
+  "description": "Select if you want to download the calculated average and individual contours as shapefile.",
   "type": "CHECKBOX",
   "defaultValue": true
 }
