@@ -35,6 +35,10 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   # cnts <- as.numeric(trimws(strsplit(as.character(conts),",")[[1]])) #if more than one contour percentage given by user, this makes a vector our of the comma-separated string ==> this was only keeping the 1st contour, at least in R. In moveapps it seems to work for some reason....
   cnts <- as.numeric(unlist(lapply(strsplit(as.character(conts),","),trimws))) ## fixed?
   # if(0.999%in%cnts){cnts}else{cnts <- c(cnts,0.999)} # NOT SURE IF TO EXCLUDE THIS. IF SOMEONE IS JUST INTEREST IN THE 0.25, AND THE 0.99 IS ALWAYS THERE (ALSO ZOOMING ALWAYS OUT TO THE ENTIRE TRACK) COULD BE ANNOYING....
+  if(0%in%cnts){ 
+    cnts <- cnts[!cnts%in%c(0)]
+    logger.warn("Countour of 0% cannot be calculated, it has been excluded") ## apparently this is not clear to everyone...
+  }else{cnts <- cnts}
   
   # need to project data on flat surface for BBMM
   data_t <- spTransform(data, center=TRUE) #aeqd in metre
