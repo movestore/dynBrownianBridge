@@ -64,5 +64,7 @@ moveStack in Movebank format
 
 **Common errors**: 
 
-- ERROR: `“Error in rasterToContour(data_t_UD_av, levels = ctr) : no contour lines”`. CAUSE: Probably the raster resolution was set to large and the track only covers a few raster cells not being enough to do the calculation. SOLUTION: Have a look in the logs of the app at the span of your data, and set the raster resolution to a size so that a single track will cover many raster cells. *Many* being in the order of at least 2 digits (just orientative).
+- ERROR: `“Error in rasterToContour(data_t_UD_av, levels = ctr) : no contour lines”`. CAUSE 1: Probably the raster resolution was set to large and the track only covers a few raster cells not being enough to do the calculation. SOLUTION 1: Have a look in the logs of the app at the span of your data, and set the raster resolution to a size so that a single track will cover many raster cells. *Many* being in the order of at least 2 digits (just orientative). CAUSE 2: the map extent value is to large. SOLUTION 2: reduce the value of the map extent.
+
+- ERROR: `Error in .local(object, raster, location.error = location.error, ext = ext, : Lower y grid not large enough, consider extending the raster in that direction or enlarging the ext argument`. CAUSE: the map extent value is to small. SOLUTION: increase the value of the map extent step by step
 
