@@ -8,12 +8,13 @@ library('OpenStreetMap')
 library("ggspatial")
 # library("viridis")
 
-# data <- readRDS("./data/raw/App-Output Autumn_Migration__Simple_Raster_Map__2022-11-14_08-30-26.rds")
-# raster_resol=10000
+# data <- readRDS("/home/ascharf/Downloads/input_for_BBMM_MarkHoog.rds")
+# plot(data)
+# raster_resol=100
 # loc.err=30
 # conts=c("0.5","0.999")
-# ext=100000
-# ignoreTimeHrs=6
+# ext=2500
+# ignoreTimeHrs=9
 # colorBy= "both" #c("trackID", "contourLevel", "both")
 # saveAsSHP=F
 
@@ -79,7 +80,15 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   UD_sldf <- raster2contour(data_t_dBBMM, level=cnts)
   
   # get contours into a SLDF object of avg layer
-  avg_sldf_L <- lapply(cnts, function(ctr){
+  mV <- minValue(data_t_UD_av) ## if the cnts contain values smaller than the min value of the avg raster it gives the error: "rasterToContour(data_t_UD_av, levels = ctr) : no contour lines"
+  if(any(cnts<mV)){
+    logger.warn(paste("Smallest UD contour for the average UD is: ", round(mV,2),". All smaller UD contours selected in the settings can not be displayed on the average UD map."))
+    cntsAvg <- c(cnts[cnts>=mV], round(mV,2)) # adding the minimum available
+    cntsAvg <- cntsAvg[order(cntsAvg)]
+    cntsAvg <- cntsAvg[!duplicated(cntsAvg)]
+  }else{cntsAvg <- cnts}
+  
+  avg_sldf_L <- lapply(cntsAvg, function(ctr){
     rasterToContour(data_t_UD_av, levels=ctr)
   })
   avg_sldf <- do.call("rbind",avg_sldf_L)
