@@ -4,17 +4,17 @@ library('sp')
 library('rgdal')
 library('ggmap')
 library('OpenStreetMap')
-
 library("ggspatial")
+library("plyr")
 # library("viridis")
 
-# data <- readRDS("/home/ascharf/Downloads/input_for_BBMM_MarkHoog.rds")
+# data <- readRDS("/home/ascharf/Downloads/Ibex_Caribou_Spring_Calving_BBMM_Test_Sarah___Filter_by_Season__2023-02-23_21-16-56.rds")
 # plot(data)
-# raster_resol=100
-# loc.err=30
+# raster_resol=200
+# loc.err=10
 # conts=c("0.5","0.999")
-# ext=2500
-# ignoreTimeHrs=9
+# ext=20000
+# ignoreTimeHrs=24
 # colorBy= "both" #c("trackID", "contourLevel", "both")
 # saveAsSHP=F
 
@@ -64,9 +64,21 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   data_t_UD_pav <- stack(data_t_UD,data_t_UD_av) #add the average raster layer to the indiv UDs, then can run this through your lapply for the UD sizes..
   names(data_t_UD_pav)[dim(data_t_UD)[3]+1] <- "average"
   
+  ## get min countur size for avg UD
+  mV <- minValue(data_t_UD_av) ## if the cnts contain values smaller than the min value of the avg raster it gives the error: "rasterToContour(data_t_UD_av, levels = ctr) : no contour lines"
+  rmV <- plyr::round_any((mV+0.05), accuracy = 0.01, f = ceiling)
+  if(any(cnts<mV)){
+    logger.warn(paste0("Smallest UD contour for the average UD is: ", rmV,". All smaller UD contours selected in the settings can not be displayed on the average UD map. The smallest possible (",rmV ,") plus all larger ones will be displayed. The countur of ",rmV," will be added to the Table of UD sizes"))
+    cntsAvg <- c(cnts[cnts>=mV], rmV) # adding the minimum available
+    cntsAvg <- cntsAvg[order(cntsAvg)]
+    cntsAvg <- cntsAvg[!duplicated(cntsAvg)]
+  }else{cntsAvg <- cnts}
+  
   # get UD size in Km2 per contour
   # AK: adapted here data_t_UD to data_t_UD_pav, so that also the contour sizes of the average UD is in
-  UD_size_L <- lapply(cnts, function(ctr){
+  cntsSize <- c(cnts,rmV) ## adding the smallest possible of the avg UD, better have more than less, right?
+  cntsSize <- cntsSize[order(cntsSize)] 
+  UD_size_L <- lapply(cntsSize, function(ctr){
     UDsel <- data_t_UD_pav<=ctr 
     UDsizem2 <- cellStats(UDsel, 'sum')*raster_resol*raster_resol
     UDsizeKm2 <- UDsizem2/1000000
@@ -80,15 +92,7 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   UD_sldf <- raster2contour(data_t_dBBMM, level=cnts)
   
   # get contours into a SLDF object of avg layer
-  mV <- minValue(data_t_UD_av) ## if the cnts contain values smaller than the min value of the avg raster it gives the error: "rasterToContour(data_t_UD_av, levels = ctr) : no contour lines"
-  if(any(cnts<mV)){
-    logger.warn(paste("Smallest UD contour for the average UD is: ", round(mV,2),". All smaller UD contours selected in the settings can not be displayed on the average UD map."))
-    cntsAvg <- c(cnts[cnts>=mV], round(mV,2)) # adding the minimum available
-    cntsAvg <- cntsAvg[order(cntsAvg)]
-    cntsAvg <- cntsAvg[!duplicated(cntsAvg)]
-  }else{cntsAvg <- cnts}
-  
-  avg_sldf_L <- lapply(cntsAvg, function(ctr){
+   avg_sldf_L <- lapply(cntsAvg, function(ctr){
     rasterToContour(data_t_UD_av, levels=ctr)
   })
   avg_sldf <- do.call("rbind",avg_sldf_L)
