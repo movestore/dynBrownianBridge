@@ -49,6 +49,11 @@ moveStack in Movebank format
 
 `Save as Shapefile [saveAsSHP]`: the specified contours of the UDs can be saved as shapefiles. This option can also be unchecked.
 
+### Most common errors
+ERROR: `“Error in rasterToContour(data_t_UD_av, levels = ctr) : no contour lines”`. CAUSE 1: Probably the raster resolution was set to large and the track only covers a few raster cells not being enough to do the calculation. SOLUTION 1: Have a look in the logs of the app at the span of your data, and set the raster resolution to a size so that a single track will cover many raster cells. *Many* being in the order of at least 2 digits (a guestimate). CAUSE 2: the map extent value is to large. SOLUTION 2: reduce the value of the map extent.
+
+ERROR: `Error in .local(object, raster, location.error = location.error, ext = ext, : Lower y grid not large enough, consider extending the raster in that direction or enlarging the ext argument`. CAUSE: the map extent value is to small. SOLUTION: increase the value of the map extent step by step
+
 ### Null or error handling:
 **`Spatial Resolution for the Utilisation/Occurance Distribution Raster [raster_resol]`:**: The resolution of the model outcome should be sufficiently small for making out your areas of interest, but should also not be too small, as runtime of the App then increases strongly.
 
@@ -61,10 +66,3 @@ moveStack in Movebank format
 **`Maximum time lag in hours [ignoreTimeHrs]`**: A time lag that is at least double or triple of the scheduled fix rate is reasonable. It allows for some missed fixes, but excludes larger periods with missed fixes, turned of tag, malfunctioning of the tag, etc. If very large time gaps are included, the result might just be one big "blob".
 
 **Data:** The full input data set is returned for further use in a next App and cannot be empty.
-
-**Common errors**: 
-
-- ERROR: `“Error in rasterToContour(data_t_UD_av, levels = ctr) : no contour lines”`. CAUSE 1: Probably the raster resolution was set to large and the track only covers a few raster cells not being enough to do the calculation. SOLUTION 1: Have a look in the logs of the app at the span of your data, and set the raster resolution to a size so that a single track will cover many raster cells. *Many* being in the order of at least 2 digits (a guestimate). CAUSE 2: the map extent value is to large. SOLUTION 2: reduce the value of the map extent.
-
-- ERROR: `Error in .local(object, raster, location.error = location.error, ext = ext, : Lower y grid not large enough, consider extending the raster in that direction or enlarging the ext argument`. CAUSE: the map extent value is to small. SOLUTION: increase the value of the map extent step by step
-
