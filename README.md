@@ -11,9 +11,15 @@ Based on a user-defined grid size and extent, a raster is defined on top of the 
 
 Some parameters of the function brownian.bridge.dyn() are fixed, as they do not influence the results strongly (window.size=31, margin=11). The time step is used as `median time lag/15` (with a minimum of 1 secs) to prevent very long running times. The location error has to be provided by the user (see below).
 
-Often, tracking data can contain large time gaps with missing data. During this period of time, there is higher uncertainty where the animal could have been, increasing drastically the area that the function needs to calculate the UD (because the animal could have been virtually anywhere). To prevent this from happening, the user can provide a maximum time lag (in hours) to be included in the calculations, i.e. for segments with time lags above the provided value no estimation will be calculated. If very large time gaps are included, the result might just be one big "blob".
+Often, tracking data can contain large time gaps with missing data. During this period of time, there is higher uncertainty where the animal could have been, increasing drastically the area that the function needs to calculate the UD (because the animal could have been virtually anywhere). To prevent this from happening, the user can provide a `maximum time lag (in hours)` to be included in the calculations, i.e. for segments with time lags above the provided value no estimation will be calculated. A time lag that is at least double or triple of the scheduled fix rate is reasonable. It allows for some missed fixes, but excludes larger periods with missed fixes, turned of tag, malfunctioning of the tag, etc. If very large time gaps are included, the result might just be one big "blob".
 
 Consider subsampling your data at first runs (e.g. use the app "Thin Data by Time"). High resolution data lead to rather long run times (for many species a time lag of 10-15mins is high enough).
+
+The settings of this App are very dependent on the input data. Often it needs a bit of "playing around" to find the optimal settings, or even to just get the App to run without errors. The `raster resolution` and `map extent` are the settings that have to be often fined tuned. 
+
+  - The `map extent` is needed for the function to have "space" to do its calculations so to say, as it needs space beyond the outer boundaries of the cloud of locations to calculate the probabilities, as there is also some probability that the animal was on that side. If the value is set to large or to small, an error will occur (see Section *Most common errors*).
+  
+  - The `raster resolution` will provide the level of detail. Fine raster resolutions (smaller raster resolution/pixel size, e.g. 100mts vs 1Km) will provide specially more details where the animal spent more or less time. The smaller the pixel size the longer the calculation will take, the larger the pixel size the coarser the results (the contour lines will display "steps"), and if the size is to large, an error will occur (see Section *Most common errors*).
 
 This App is strongly based on the dynamic Brownian Bridge model developed in this manuscript: Kranstauber, B., Kays, R., LaPoint, S. D., Wikelski, M., & Safi, K. (2012). A dynamic Brownian bridge movement model to estimate utilization distributions for heterogeneous animal movement. Journal of Animal Ecology, 81(4), 738-746.
 
@@ -50,7 +56,7 @@ moveStack in Movebank format
 `Save as Shapefile [saveAsSHP]`: the specified contours of the UDs can be saved as shapefiles. This option can also be unchecked.
 
 ### Most common errors
-ERROR: `“Error in rasterToContour(data_t_UD_av, levels = ctr) : no contour lines”`. CAUSE 1: Probably the raster resolution was set to large and the track only covers a few raster cells not being enough to do the calculation. SOLUTION 1: Have a look in the logs of the app at the span of your data, and set the raster resolution to a size so that a single track will cover many raster cells. *Many* being in the order of at least 2 digits (a guestimate). CAUSE 2: the map extent value is to large. SOLUTION 2: reduce the value of the map extent.
+ERROR: `“Error in rasterToContour(data_t_UD_av, levels = ctr) : no contour lines”`. CAUSE 1: Probably the raster resolution was set to large and the track only covers a few raster cells not being enough to do the calculation. SOLUTION 1: Have a look in the logs of the app at the span of your data, and set the raster resolution to a size so that a single track will cover many raster cells. *Many* being in the order of at least 2 digits (a guestimate). CAUSE 2: the map extent value is to large. SOLUTION 2: reduce the value of the map extent, often half of the span of the data is sufficient.
 
 ERROR: `Error in .local(object, raster, location.error = location.error, ext = ext, : Lower y grid not large enough, consider extending the raster in that direction or enlarging the ext argument`. CAUSE: the map extent value is to small. SOLUTION: increase the value of the map extent step by step
 
