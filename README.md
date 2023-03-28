@@ -7,7 +7,7 @@ Github repository: *github.com/movestore/dynBrownianBridge*
 Estimates a utilisation distribution of your tracked animals using the dynamic Brownian Bridge Movement Model. Different maps with contours are generated. Tip: Consider subsampling your data (e.g. use the app "Thin Data by Time") at first runs and if your data are collected at a very high frequency.
 
 ## Documentation
-Based on a user-defined grid size and extent, a raster is defined on top of the area of the input data tracks. Using the R-function brownian.bridge.dyn() and getVolumeUD(), this App calculates the utilisation distributions (UD; =occurance distribution) per individual track. An average UD combining the UDs of all tracks is calculated. Please beware that the average UD is only useful if resolutions of the different tracks are comparable. The user-specified contours are displayed for the average UD, per individual in separate maps and for all individuals in one map. A table with the UD sizes in Km^2 for the average and per individual and specified contours is returned. The contours can also be downloaded as shapefiles. It may occur that for the average UD not all the user-specified contours can be displayed, in this case the smallest possible will be displayed.
+Based on a user-defined grid size and extent, a raster is defined on top of the area of the input data tracks. Using the R-function brownian.bridge.dyn() and getVolumeUD(), this App calculates the utilisation distributions (UD; =occurance distribution) per track. An average UD combining the UDs of all tracks is calculated. Please beware that the average UD is only useful if resolutions of the different tracks are comparable. The user-specified contours are displayed for the average UD, per tracks in separate maps and for all tracks in one map. A table with the UD sizes in Km^2 for the average and per track and specified contours is returned. The contours can also be downloaded as shapefiles. It may occur that for the average UD not all the user-specified contours can be displayed, in this case the smallest possible will be displayed.
 
 Some parameters of the function brownian.bridge.dyn() are fixed, as they do not influence the results strongly (window.size=31, margin=11). The time step is used as `median time lag/15` (with a minimum of 1 secs) to prevent very long running times. The location error has to be provided by the user (see below).
 
@@ -30,13 +30,13 @@ moveStack in Movebank format
 moveStack in Movebank format
 
 ### Artefacts
-`UD_size_per_contour.csv`: table containing the UD size in Km^2 per contour and individual
+`UD_size_per_contour.csv`: table containing the UD size in Km^2 per contour and track
 
-`UD_contour_xx_xx_xx`: the shapefile of the contours of all individuals
+`UD_contour_xx_xx_xx`: the shapefile of the contours of all tracks
 
-`UD_ContourMap_color_xxxx_contours:xxx_xxx_xxx.png`: OpenStreetMap of your tracking area with the modelled utilisation probabilities as requested by the variable `conts`. All individual UDs are superimposed on one map for comparison.
+`UD_ContourMap_color_xxxx_contours:xxx_xxx_xxx.png`: OpenStreetMap of your tracking area with the modelled utilisation probabilities as requested by the variable `conts`. All UDs are superimposed on one map for comparison.
 
-`UD_ContourMap_per_Indv_contours_xxx_xxx_xx.pdf`: OpenStreetMap of your tracking area with the modelled utilisation probabilities for each individual track (`ID`, one map per track, and one additional average UD map) as requested by the variable `conts`.
+`UD_ContourMap_per_Track_contours_xxx_xxx_xx.pdf`: OpenStreetMap of your tracking area with the modelled utilisation probabilities for each track (`ID`, one map per track, and one additional average UD map) as requested by the variable `conts`.
 
 `Avg_UD_ContourMap_contours_xxx_xxx_xxx.png`: OpenStreetMap of your tracks with average modelled utilisation probability contour areas as requrest by the variable `conts`.
 
@@ -51,7 +51,7 @@ moveStack in Movebank format
 
 `Maximum time lag in hours [ignoreTimeHrs]`: maximum time lag in hours to be included in the calculations, for segments with larger time lags no estimation will be calculated . Default is 24h. Also see `Null or error handling` below.
 
-`Diferenciation by color in map with all individuals [colorBy]`: The map displaying the UDs of all individuals can be colored by: `trackID`, `contour level` or  `trackID and contour level`. The defalt option is by trackID.
+`Diferenciation by color in map with all tracks [colorBy]`: The map displaying the UDs of all tracks can be colored by: `trackID`, `contour level` or  `trackID and contour level`. The default option is by trackID.
 
 `Save as Shapefile [saveAsSHP]`: the specified contours of the UDs can be saved as shapefiles. This option can also be unchecked.
 

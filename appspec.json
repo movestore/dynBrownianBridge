@@ -37,7 +37,7 @@
 },
 	{
       "id": "colorBy",
-      "name": "Diferenciation by color in map with all individuals",
+      "name": "Diferenciation by color in map with all tracks",
       "description": "Select what should be identified by different colors:",
       "type": "DROPDOWN",
       "defaultValue":"trackID",
