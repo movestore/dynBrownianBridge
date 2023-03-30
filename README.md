@@ -4,28 +4,28 @@ MoveApps
 Github repository: *github.com/movestore/dynBrownianBridge*
 
 ## Description
-Estimates a utilisation distribution (UD) of your tracked animals using the dynamic Brownian Bridge Movement Model. Results include a table of UDs and contours indicating the probability of space use for each track and for the entire dataset, as maps and an optional shapefile. Tip: Consider subsampling your data (e.g., using the app "Thin Data by Time") at first and if your data are collected at a very high frequency.
+Estimates a utilisation distribution (UD) of your tracked animals or track segments using the dynamic Brownian Bridge Movement Model. Results include a table of UDs and contours indicating the probability of space use for each track and for the entire dataset, as maps and an optional shapefile. Tip: Consider subsampling your data (e.g., using the app "Thin Data by Time") at first and if your data are collected at a very high frequency.
 
 ## Documentation
 Based on a user-defined grid size and extent, a raster is defined on top of the area of the input data tracks. Using the R-function brownian.bridge.dyn() and getVolumeUD(), this App calculates the utilisation distributions (UD, i.e., occurance distribution) per track, as well as an average UD combining the UDs of all tracks, based on user-specified contours representing the probability of space use. These contours are provided for the average UD per track in separate maps, and for all tracks in one map, and as a table with the UD sizes in km^2 for the average and per-track and specified contours. The contours can also be provided as a shapefile. This App is strongly based on the dynamic Brownian Bridge model implemented in the [move](https://cran.r-project.org/web/packages/move/index.html) package and developed in Kranstauber et al. (2012): Kranstauber B, Kays R, LaPoint SD, Wikelski M, Safi K. 2012. A dynamic Brownian bridge movement model to estimate utilization distributions for heterogeneous animal movement. Journal of Animal Ecology. 81(4):738-746. [https://doi.org/10.1111/j.1365-2656.2012.01955.x](https://doi.org/10.1111/j.1365-2656.2012.01955.x)
 
 Please beware that
 
-* Calculations are performed on "TrackID" in the dataset, which can indicate individual animals, or track segments, depending on the results of previous Apps in the workflow. If individual tracks have been segmented, the Track IDs will be named as the animal ID with a number added to the end.
+* Calculations are performed on "TrackID" in the dataset, which can indicate individual animals, or track segments, depending on the results of previous Apps in the workflow. If individual's tracks have been segmented, the Track IDs will be named as the animal ID with a number added to the end.
 * The average UD is only useful if resolutions of the different tracks are comparable. 
 * It may occur that for the average UD not all the user-specified contours can be displayed; in this case the smallest possible value will be displayed.
 
 Some parameters of the function brownian.bridge.dyn() are fixed, as they do not influence the results strongly (window.size = 31, margin = 11). The time step used is `median time lag/15` (with a minimum of 1 sec) to prevent very long running times. The estimated location error is provided by the user (see below).
 
-Often, tracking data can contain large time gaps with missing data. During this period of time, there is higher uncertainty where the animal could have been, drastically increasing the area that the function needs to calculate the UD (because the animal could have been virtually anywhere). To prevent this from happening, the user can provide a `maximum time lag (in hours)` to be included in the calculations. If provided, no estimation will be calculated for segments exceeding this time lag. A time lag that is at least double or triple of the scheduled fix rate is reasonable. This allows for some missed fixes, but excludes larger periods with missed fixes, turned of tag, malfunctioning of the tag, etc. If very large time gaps are included, the result might just be one big "blob".
+Often, tracking data can contain large time gaps with missing data. During this period of time, there is higher uncertainty where an animal could have been, drastically increasing the area that the function needs to calculate the UD (because the animal could have been virtually anywhere). To prevent this from happening, the user can provide a `maximum time lag (in hours)` to be included in the calculations. If provided, no estimation will be calculated for segments exceeding this time lag. A time lag that is at least double or triple of the scheduled fix rate is reasonable. This allows for some missed fixes, but excludes larger periods with missed fixes, turned of tag, malfunctioning of the tag, etc. If very large time gaps are included, the result might just be one big "blob".
 
 Consider subsampling your data for the first run (e.g., using the app "Thin Data by Time"). High-resolution data lead to rather long run times (for many species a time lag of 10-15 mins is high enough).
 
 The settings of this App are very dependent on the input data. While the App settings will not change the biological significance of results, they affect whether the calculations can be performed. Often it takes a bit of "playing around" to find the optimal settings, or even to just get the App to run without errors. The `raster resolution` and `map extent` are the settings that have to be often fined tuned:
 
-  - The `map extent` is needed for the function to have "space" to do its calculations, that is, to include space beyond the outer boundaries of the cloud of locations to calculate the probabilities, as there is also some probability that the animal occurred beyond that extent. If the value is set too large or too small, an error will occur (see Section [Most common errors](#most-common-errors)).
+  - The `map extent` is needed for the function to have "space" to do its calculations, that is, to include space beyond the outer boundaries of the cloud of locations to calculate the probabilities, as there is also some probability that an animal occurred beyond that extent. If the value is set too large or too small, an error will occur (see Section [Most common errors](#most-common-errors)).
   
-  - The `raster resolution` will provide the level of detail at which the results are provided. Fine raster resolutions (smaller raster resolution/pixel size, e.g. 100 m vs 1 km) will provide specially more detail about where the animal spent more or less time. The smaller the pixel size, the longer the calculation will take; the larger the pixel size, the coarser the results (the contour lines will display "steps"), and if the size is to large, an error will occur (see Section [Most common errors](#most-common-errors)).
+  - The `raster resolution` will provide the level of detail at which the results are provided. Fine raster resolutions (smaller raster resolution/pixel size, e.g., 100 m vs 1 km) will provide specially more detail about where the animal spent more or less time. The smaller the pixel size, the longer the calculation will take; the larger the pixel size, the coarser the results (the contour lines will display "steps"); and if the size is too large, an error will occur (see Section [Most common errors](#most-common-errors)).
 
 ### Input data
 moveStack in Movebank format
@@ -55,7 +55,7 @@ moveStack in Movebank format
 
 **Maximum time lag in hours (`ignoreTimeHrs`):** Maximum time lag in hours to be included in the calculations; for segments with larger time lags, no estimation will be calculated. Default is 24h. Also see `Null or error handling` below.
 
-**Differentiation by color in map with all tracks (`colorBy`):** The map displaying the UDs of all individuals can be colored by: `trackID`, `contour level` or  `trackID and contour level`. The defalt option is by trackID.
+**Differentiation by color in map with all tracks (`colorBy`):** The map displaying the UDs of all tracks can be colored by: `trackID`, `contour level` or  `trackID and contour level`. The default option is trackID.
 
 **Save as Shapefile (`saveAsSHP`):** The specified contours of the UDs can be saved as shapefiles. This option can also be unchecked.
 
