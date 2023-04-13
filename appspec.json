@@ -2,7 +2,7 @@
   "settings": [
 	{
       "id": "raster_resol",
-      "name": "Spatial resolution for the Utilisation/Occurance Distribution raster",
+      "name": "Spatial resolution for the UD raster",
       "description": "Provide the grid size for the raster in which the Utilisation/Occurance Distribution will be estimated by the model (in metres). Default is 10000 m = 10 km, which might be too large for smaller-scale studies. Note that computation duration increases substantially with smaller grid sizes, and you may need to increase the 'Map extent' (see below).",
       "defaultValue": 10000,
       "type": "DOUBLE"
@@ -23,22 +23,22 @@
     },
 	{
       "id": "ext",
-      "name": "Map extent",
-      "description": "Define the extension beyond the area of your tracks (distance in metres) that will be used to calculate the Utilisation/Occurance Distribution. If you encounter an error that the area is too small, please increase this value. The number should be above the extent of the data set, which is provided in the App's Logs after running, please have a look. Unit = metre. Defaults to 20000 m = 20 km.",
+      "name": "Map extent increase",
+      "description": "Define the value for enlarging the map area beyond the outer boundaries of the locations. This value will be added evenly on all four directions. Often the value of half of the span of the data is sufficient (see the message in the logs of the App referring to the span of the used data after the first run). If you encounter an error that the area is too small, please increase this value. Unit = metre. Defaults to 20000 m = 20 km.",
       "defaultValue": 20000,
       "type": "DOUBLE"
     },
     {
   "id": "ignoreTimeHrs",
   "name": "Maximum time lag in hours",
-  "description": "Optionally, define the maximum time lag (in hours) to be included in the calculations, for example, two or three times the scheduled fix rate. This is to avoid unexpected results due to extended gaps in the data. Segments with gaps longer than this lag will not be included in the calculations. Decimals are allowed.",
+  "description": "Define the maximum time lag (in hours) to be included in the calculations, for example, two or three times the scheduled fix rate. This is to avoid unexpected results due to extended gaps in the data. Segments with gaps longer than this lag will not be included in the calculations. Decimals are allowed.",
   "type": "DOUBLE",
   "defaultValue": 24
 },
 	{
       "id": "colorBy",
       "name": "Differentiation by color in map with all tracks",
-      "description": "Select what should be identified by different colors in the contour map showing all tracks:",
+      "description": "Select what should be identified by different colors:",
       "type": "DROPDOWN",
       "defaultValue":"trackID",
       "options": [{
