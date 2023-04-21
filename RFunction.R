@@ -8,17 +8,17 @@ library("ggspatial")
 library("plyr")
 # library("viridis")
 
-# data <- readRDS("/home/ascharf/Downloads/Ibex_Caribou_Spring_Calving_BBMM_Test_Sarah___Filter_by_Season__2023-02-23_21-16-56.rds")
-# plot(data)
-# raster_resol=200
-# loc.err=10
-# conts=c("0.5","0.999")
-# ext=20000
-# ignoreTimeHrs=24
-# colorBy= "both" #c("trackID", "contourLevel", "both")
-# saveAsSHP=F
+data <- readRDS("/home/ascharf/Downloads/Autumn_Migration__Interactive_Map_tmap___2023-03-08_22-03-15.rds")
+plot(data)
+raster_resol=50000
+loc.err=30
+conts=c("0.5","0.75","0.99")
+ext=200000
+ignoreTimeHrs=6
+colorBy= "both" #c("trackID", "contourLevel", "both")
+saveAsSHP=F
 
-rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,ignoreTimeHrs=24, colorBy=c("trackID", "contourLevel", "both"), saveAsSHP=TRUE){
+rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,ignoreTimeHrs=NULL, colorBy=c("trackID", "contourLevel", "both"), saveAsSHP=TRUE){
   Sys.setenv(tz="UTC")
   
   #indicate the area spanned by the data for the user
@@ -50,8 +50,9 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   
   # calculate first the variance to be able to exclude larger timegaps that increase uncertanty
   data_t_dBBvar <- brownian.motion.variance.dyn(data_t, location.error=loc.err, margin=11, window.size=31)
+  if(!is.null(ignoreTimeHrs)){
   data_t_dBBvar@interest[unlist(timeLag(data_t,"hours"))>ignoreTimeHrs] <- FALSE ## excluding segments longer than "ignoreTimeHrs" hours from the dbbmm
-  
+  }
   # calculate dBB of the variance
   data_t_dBBMM <- brownian.bridge.dyn(data_t_dBBvar, raster = Ra,  window.size = 31, margin=11, time.step = timeStep, location.error = rep(loc.err,length(data_t_dBBvar)), verbose=F)
   
@@ -93,6 +94,7 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   
   # get contours into a SLDF object of avg layer
    avg_sldf_L <- lapply(cntsAvg, function(ctr){
+     # print(ctr)
     rasterToContour(data_t_UD_av, levels=ctr)
   })
   avg_sldf <- do.call("rbind",avg_sldf_L)

@@ -4,7 +4,7 @@
 ## Provided testing datasets in `./data/raw`: 
 ## "input1_pigeons.rds", "input2_geese.rds", "input3_stork.rds", "input4_goat.rds"  
 ## for own data: file saved as a .rds containing a object of class MoveStack
-inputFileName = "/home/ascharf/Downloads/input_for_BBMM_MarkHoog.rds"
+inputFileName = "./data/raw/input4_goat.rds"
 
 ## optionally change the output file name
 unlink("./data/output/", recursive = TRUE)
@@ -27,8 +27,8 @@ args <- list()
 args[["raster_resol"]] = 50
 args[["loc.err"]] = 30
 args[["conts"]] = 	"0.5,0.95,0.99,0.999"
-args[["ext"]] = 2500
-args[["ignoreTimeHrs"]] = 9 #10/60
+args[["ext"]] = 20000
+args[["ignoreTimeHrs"]] = NULL #10/60
 args[["colorBy"]] = "both" #c("trackID", "contourLevel", "both")
 args[["saveAsSHP"]] = FALSE
 ##############################

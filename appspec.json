@@ -17,7 +17,7 @@
 	{
       "id": "conts",
       "name": "Contour percentages",
-      "description": "Provide the contour percentages to calculate and map, as a value between 0 and 1. These percentages represent the probability that a random animal of the tracked species is found in the estimated area(s) during the considered time period. Enter multiple contours in descending order and separated by commas (example: 0.999,0.9,0.75,0.5,0). To avoid empty central areas, include a zero at the end. Defaults to 0.999.",
+      "description": "Provide the contour percentages to calculate and map, as a value between 0 and 1. These percentages represent the probability that a random animal of the tracked species is found in the estimated area(s) during the considered time period. Enter multiple contours in descending order and separated by commas (example: 0.999,0.9,0.75,0.5). Defaults to 0.999.",
       "defaultValue": "0.999",
       "type": "STRING"
     },
@@ -30,10 +30,10 @@
     },
     {
   "id": "ignoreTimeHrs",
-  "name": "Maximum time lag in hours",
-  "description": "Define the maximum time lag (in hours) to be included in the calculations, for example, two or three times the scheduled fix rate. This is to avoid unexpected results due to extended gaps in the data. Segments with gaps longer than this lag will not be included in the calculations. Decimals are allowed.",
+  "name": "Maximum time lag in hours (optional)",
+  "description": "Define the maximum time lag (in hours) to be included in the calculations, for example, two or three times the scheduled fix rate. This is to avoid unexpected results due to extended gaps in the data. Segments with gaps longer than this lag will not be included in the calculations. Decimals are allowed. When left empty, all segments are included. By default all segments are included in the calculations.",
   "type": "DOUBLE",
-  "defaultValue": 24
+  "defaultValue": null
 },
 	{
       "id": "colorBy",
