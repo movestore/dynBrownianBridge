@@ -8,15 +8,15 @@ library("ggspatial")
 library("plyr")
 # library("viridis")
 
-data <- readRDS("/home/ascharf/Downloads/Autumn_Migration__Interactive_Map_tmap___2023-03-08_22-03-15.rds")
-plot(data)
-raster_resol=50000
-loc.err=30
-conts=c("0.5","0.75","0.99")
-ext=200000
-ignoreTimeHrs=6
-colorBy= "both" #c("trackID", "contourLevel", "both")
-saveAsSHP=F
+# data <- readRDS("/home/ascharf/Downloads/Autumn_Migration__Interactive_Map_tmap___2023-03-08_22-03-15.rds")
+# plot(data)
+# raster_resol=50000
+# loc.err=30
+# conts=c("0.5","0.75","0.99")
+# ext=200000
+# ignoreTimeHrs=6
+# colorBy= "both" #c("trackID", "contourLevel", "both")
+# saveAsSHP=F
 
 rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,ignoreTimeHrs=NULL, colorBy=c("trackID", "contourLevel", "both"), saveAsSHP=TRUE){
   Sys.setenv(tz="UTC")
