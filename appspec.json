@@ -60,7 +60,14 @@
   "description": "Select if you want the results to include a shapefile containing the calculated contours.",
   "type": "CHECKBOX",
   "defaultValue": true
-}
+},
+	{
+      "id": "stamen_key",
+      "name": "Stadia API key",
+      "description": "For visualisation of the tracks on map background you need to enter an API key from stadia here. Note that this is only a workaround for a few months until MoveApps provides an own OSM mirror. Register for a stadia API key here, it is free: https://stadiamaps.com/stamen/onboarding/create-account.",
+      "defaultValue": null,
+      "type": "STRING"
+    }	
     
   ],
   "dependencies": {

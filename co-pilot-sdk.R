@@ -1,10 +1,12 @@
+library(jsonlite)
+library(dotenv)
 ##################
 ## input/output ## adjust!
 ##################
 ## Provided testing datasets in `./data/raw`: 
 ## "input1_pigeons.rds", "input2_geese.rds", "input3_stork.rds", "input4_goat.rds"  
 ## for own data: file saved as a .rds containing a object of class MoveStack
-inputFileName = "./data/raw/input4_goat.rds"
+inputFileName = "./data/raw/fishersmv.rds"
 
 ## optionally change the output file name
 unlink("./data/output/", recursive = TRUE)
@@ -21,16 +23,17 @@ outputFileName = "./data/output/output.rds"
 # The parameter must look like:
 #    args[["username"]] = "my_username"
 #    args[["department"]] = "my_department"
-
+load_dot_env(file='ascharf.env')
 args <- list()
 # Add all your arguments of your r-function here
-args[["raster_resol"]] = 50
+args[["raster_resol"]] = 100
 args[["loc.err"]] = 30
-args[["conts"]] = 	"0.5,0.95,0.99,0.999"
-args[["ext"]] = 20000
-args[["ignoreTimeHrs"]] = NULL #10/60
+args[["conts"]] = "0.5,0.95,0.99,0.999"
+args[["ext"]] = 5000
+args[["ignoreTimeHrs"]] = 6 #10/60
 args[["colorBy"]] = "both" #c("trackID", "contourLevel", "both")
 args[["saveAsSHP"]] = FALSE
+args[["stamen_key"]] = Sys.getenv("STADIA_API")
 ##############################
 ## source, setup & simulate ## leave as is!
 ##############################

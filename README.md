@@ -59,6 +59,9 @@ moveStack in Movebank format
 
 **Save as Shapefile (`saveAsSHP`):** The specified contours of the UDs can be saved as shapefiles. This option can also be unchecked.
 
+**Stadia API key (`stamen_key`):** For visualisation of the rest sites on map background you need to enter an API key from stadia here. Note that this is only a workaround for a few months until MoveApps provides an own OSM mirror. Register for a stadia API key here, it is free: https://stadiamaps.com/stamen/onboarding/create-account.
+
+
 ### Most common errors
 ERROR: `“Error in rasterToContour(data_t_UD_av, levels = ctr) : no contour lines”`. CAUSE 1: Most likely the raster resolution was set too large, such that the track only covers a few raster cells, resulting in too few cells to do the calculation. SOLUTION 1: Have a look in the logs of the app (under "Show Logs") at the span of your data, and set the raster resolution to a size so that a single track will cover many raster cells. *Many* being in the order of at least 2 digits (a guesstimate). CAUSE 2: The `map extent increase` value is too large. SOLUTION 2: Reduce the value of the `map extent increase`; often half of the span of the data is sufficient.
 
@@ -74,5 +77,7 @@ ERROR: `Error in .local(object, raster, location.error = location.error, ext = e
 **Map extent increase (`ext`):** Select this value reasonably, accounting for the tracking area of your data. It will add to the area evenly on all four directions. Depending on the size of your study, you might not see your tracks if this value is too large. However, if this value is too small, an error will occur saying your extent is not large enough for the calculations (this error is very common, simply increase this value). If you get the error: "no contour lines", this value is too large.
 
 **Maximum time lag in hours (`ignoreTimeHrs`):** A time lag that is at least double or triple of the scheduled fix rate is reasonable. It allows for some missed fixes, but excludes larger periods with missed fixes, tags turned off or malfunctioning, etc. If very large time gaps are included, the result might just be one big "blob". See the message in the logs of the App (under "Show Logs") referring to the time lag of the data. The median time lag will most probably reflect the intended scheduled fix rate.
+
+**stamen_key:** Without providing an API key from stadia for using stamen maps, there will be no map pdf artifact.
 
 **Data:** The full input data set is returned for further use in subsequent Apps and cannot be empty.

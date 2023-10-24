@@ -2,25 +2,26 @@ library('move')
 library('raster')
 library('sp')
 library('rgdal')
-library('ggmap')
+library('ggmap') #needs installation from github: stadiamaps/ggmap
 library('OpenStreetMap')
 library("ggspatial")
 library("plyr")
 # library("viridis")
 
-# data <- readRDS("/home/ascharf/Downloads/Autumn_Migration__Interactive_Map_tmap___2023-03-08_22-03-15.rds")
+# data <- readRDS("./data/raw/fishersmv.rds")
 # plot(data)
-# raster_resol=50000
+# raster_resol=100
 # loc.err=30
 # conts=c("0.5","0.75","0.99")
-# ext=200000
+# ext=5000
 # ignoreTimeHrs=6
 # colorBy= "both" #c("trackID", "contourLevel", "both")
 # saveAsSHP=F
+# stamen_key="7d59ce66-d885-4899-8888-b3bde8bd8a6b"
 
-rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,ignoreTimeHrs=NULL, colorBy=c("trackID", "contourLevel", "both"), saveAsSHP=TRUE){
+rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,ignoreTimeHrs=NULL, colorBy=c("trackID", "contourLevel", "both"), saveAsSHP=TRUE,stamen_key=NULL){
   Sys.setenv(tz="UTC")
-  
+
   #indicate the area spanned by the data for the user
   ix1 <- which(coordinates(data)[,1]==min(coordinates(data)[,1],na.rm=TRUE))
   ix2 <- which(coordinates(data)[,1]==max(coordinates(data)[,1],na.rm=TRUE))
@@ -68,9 +69,10 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   ## get min countur size for avg UD
   mV <- minValue(data_t_UD_av) ## if the cnts contain values smaller than the min value of the avg raster it gives the error: "rasterToContour(data_t_UD_av, levels = ctr) : no contour lines"
   rmV <- plyr::round_any((mV+0.05), accuracy = 0.01, f = ceiling)
-  if(any(cnts<mV)){
+  if(any(cnts<mV | min(cnts)==mV)){
     logger.warn(paste0("Smallest UD contour for the average UD is: ", rmV,". All smaller UD contours selected in the settings can not be displayed on the average UD map. The smallest possible (",rmV ,") plus all larger ones will be displayed. The countur of ",rmV," will be added to the Table of UD sizes"))
     cntsAvg <- c(cnts[cnts>=mV], rmV) # adding the minimum available
+    if(min(cnts)==mV){cntsAvg <- cntsAvg[!cntsAvg%in%min(cnts)]} # this contour gives error in ~L102
     cntsAvg <- cntsAvg[order(cntsAvg)]
     cntsAvg <- cntsAvg[!duplicated(cntsAvg)]
   }else{cntsAvg <- cnts}
@@ -119,7 +121,12 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   data_df <- data.frame(coordinates(data))
   colnames(data_df) <- c("long","lat")
   data_df$indv <- trackId(data)
-  map1 <- get_map(bbox(extent(UD_sldf_t)*1.5), source="stamen")
+  
+  if (is.null(stamen_key)) {logger.info("You have not entered a stadia API key. Until MoveApps provides its OSM mirror, this is required. Register with stamen until then, it is free. Go to: https://stadiamaps.com/stamen/onboarding/create-account")} else {
+    register_stadiamaps(stamen_key)
+    
+    logger.info("Your stadia API key is registered.")
+    map1 <- get_map(bbox(extent(UD_sldf_t)*1.5),maptype="stamen_terrain", source="stadia")
   
   mapF <- ggmap(map1) +
     geom_path(data=data_df, aes(x=long, y=lat, group=indv),alpha=0.2)+
@@ -129,7 +136,7 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   # scale_color_viridis("",option="turbo", discrete=T)#+
   # labs(x="",y="")+
   # theme(axis.text=element_blank(),axis.ticks=element_blank())
-  
+
   png(file=paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"),"UD_ContourMap_color_",colorBy,"_contours_",paste0(cnts,collapse="_"),".png"),res=300,height=2000,width=2000) 
   print(mapF)
   dev.off()
@@ -145,7 +152,7 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
     
     # map for all individuals
     Indv_data_df <- data_df[data_df$indv%in%unique(Indv_UD_sldf_fort$track),]
-    map1 <- get_map(bbox(extent(UDcontIndiv)*1.5),source="stamen")
+    map1 <- get_map(bbox(extent(UD_sldf_t)*1.5),maptype="stamen_terrain", source="stadia")
     
     mapF <- ggmap(map1) +
       geom_path(data=Indv_data_df, aes(x=long, y=lat),alpha=0.2)+
@@ -168,7 +175,7 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   data_df <- data.frame(coordinates(data))
   colnames(data_df) <- c("long","lat")
   data_df$indv <- trackId(data)
-  map1avg <- get_map(bbox(extent(UD_sldf_t)*1.5), source="stamen")
+  map1avg <- get_map(bbox(extent(UD_sldf_t)*1.5),maptype="stamen_terrain", source="stadia")
   
   ## OPTION 1: all levels in one plot 
   mapFavg <- ggmap(map1avg) +
@@ -196,6 +203,6 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   #})
   #dev.off()
   ## option2
-  
+}
   return(data)
 }
