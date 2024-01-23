@@ -10,7 +10,7 @@ library("plyr")
 # library("viridis")
 
 # data <- readRDS("/home/ascharf/Downloads/Autumn_Migration__Interactive_Map_tmap___2023-03-08_22-03-15.rds")
-# data <- readRDS("./data/raw/fishers.rds")
+# data <- readRDS("./data/raw/input1_move2loc_LatLon.rds")
 # plot(data)
 # raster_resol=100
 # loc.err=30
@@ -20,10 +20,11 @@ library("plyr")
 # colorBy= "both" #c("trackID", "contourLevel", "both")
 # saveAsSHP=F
 
-rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,ignoreTimeHrs=NULL, colorBy=c("trackID", "contourLevel", "both"), saveAsSHP=TRUE){
+rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,ignoreTimeHrs=NULL, 
+                      colorBy=c("trackID", "contourLevel", "both"), saveAsSHP=TRUE,stamen_key=NULL){
   Sys.setenv(tz="UTC")
   
-  datamv <- to_move(data)
+  datamv <- moveStack(to_move(data))
   
   #indicate the area spanned by the data for the user
   ix1 <- which(coordinates(datamv)[,1]==min(coordinates(datamv)[,1],na.rm=TRUE))
@@ -91,7 +92,7 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
     return(df)
   })
   UD_size_df <- do.call("rbind",UD_size_L) #what does this give? the sizes of all contours for each track? YES, each row is a track, a contour level, and its UD size in Km2. each combi track-contour gets its own row and ud size value
-  write.csv(UD_size_df, row.names=F, file = paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"),"UD_size_per_contour.csv"))
+  write.csv(UD_size_df, row.names=F, file = appArtifactPath("UD_size_per_contour.csv"))
   
   # get contours into a SLDF object
   UD_sldf <- raster2contour(datamv_t_dBBMM, level=cnts)
@@ -105,14 +106,14 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   avg_sldf$individual.local.identifier <- "average"
   # joining both
   UD_sldf <- rbind(UD_sldf,avg_sldf)
-  ######################### here ################################### error in line above
+  
   # changing ID names of the SLDF as the default ones cannot be interpreted
   UD_sldf <-  spChFIDs(UD_sldf, as.character(paste0(UD_sldf$individual.local.identifier,"_",UD_sldf$level))) 
   
   UD_sldf_t <- spTransform(UD_sldf,CRS("+proj=longlat"))
   
   # save contour as shp
-  if(saveAsSHP){writeOGR(UD_sldf_t, dsn=paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/")), layer=paste0("UD_contour:",paste0(cnts,collapse="_")), driver="ESRI Shapefile", overwrite_layer=TRUE)}
+  if(saveAsSHP){writeOGR(UD_sldf_t, dsn=appArtifactPath, layer=paste0("UD_contour:",paste0(cnts,collapse="_")), driver="ESRI Shapefile", overwrite_layer=TRUE)}
   
   # prepare SLDF for ggplot
   UD_sldf_fort <- ggplot2::fortify(UD_sldf_t[!UD_sldf_t$individual.local.identifier=="average",]) #for stack of individual plots leave out average
@@ -123,67 +124,72 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   datamv_df <- data.frame(coordinates(datamv))
   colnames(datamv_df) <- c("long","lat")
   datamv_df$indv <- trackId(datamv)
-  map1 <- get_map(bbox(extent(UD_sldf_t)*1.5), source="stamen")
   
-  mapF <- ggmap(map1) +
-    geom_path(datamv=datamv_df, aes(x=long, y=lat, group=indv),alpha=0.2)+
-    geom_point(datamv=datamv_df, aes(x=long, y=lat, group=indv),alpha=0.1, shape=20)+
-    ggspatial::geom_spatial_path(datamv = UD_sldf_fort, aes(long,lat, group=group, color=if(colorBy=="trackID"){track}else if(colorBy=="contourLevel"){contour}else if(colorBy=="both"){id}))+ #,size=1
-    scale_colour_manual("",values = rainbow(if(colorBy=="trackID"){length(unique(UD_sldf_fort$track))}else if(colorBy=="contourLevel"){length(unique(UD_sldf_fort$contour))}else if(colorBy=="both"){length(unique(UD_sldf_fort$id))})) #+
-  # scale_color_viridis("",option="turbo", discrete=T)#+
-  # labs(x="",y="")+
-  # theme(axis.text=element_blank(),axis.ticks=element_blank())
-  
-  png(file=paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"),"UD_ContourMap_color_",colorBy,"_contours_",paste0(cnts,collapse="_"),".png"),res=300,height=2000,width=2000) 
-  print(mapF)
-  dev.off()
-  
-  # one map per indiv in 1 pdf, incl. map of average
-  UD_sldf_t_L <- move::split(UD_sldf_t,UD_sldf_t$individual.local.identifier)
-  
-  pdf(paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"), "UD_ContourMap_per_Indv","_contours_",paste0(cnts,collapse="_"),".pdf")) 
-  lapply(UD_sldf_t_L, function(UDcontIndiv){
-    Indv_UD_sldf_fort <- ggplot2::fortify(UDcontIndiv)
-    Indv_UD_sldf_fort$track <- unlist(lapply(strsplit(Indv_UD_sldf_fort$id,"_"),function(x) {x[1]}))
-    Indv_UD_sldf_fort$contour <- unlist(lapply(strsplit(Indv_UD_sldf_fort$id,"_"),function(x) {x[2]}))
+  if (is.null(stamen_key)) {logger.info("You have not entered a stadia API key. Until MoveApps provides its OSM mirror, this is required. Register with stamen until then, it is free. Go to: https://stadiamaps.com/stamen/onboarding/create-account")} else {
+    register_stadiamaps(stamen_key)
     
-    # map for all individuals
-    Indv_datamv_df <- datamv_df[datamv_df$indv%in%unique(Indv_UD_sldf_fort$track),]
-    map1 <- get_map(bbox(extent(UDcontIndiv)*1.5),source="stamen")
+    logger.info("Your stadia API key is registered.")
+    map1 <- get_map(bbox(extent(UD_sldf_t)*1.5),maptype="stamen_terrain", source="stadia")
     
     mapF <- ggmap(map1) +
-      geom_path(datamv=Indv_datamv_df, aes(x=long, y=lat),alpha=0.2)+
-      geom_point(datamv=Indv_datamv_df, aes(x=long, y=lat),alpha=0.1, shape=20)+
-      ggspatial::geom_spatial_path(datamv = Indv_UD_sldf_fort, aes(long,lat, group=group, color=id))+ #,size=1
-      scale_colour_manual("",values = rainbow(length(unique(Indv_UD_sldf_fort$id)))) #+
+      geom_path(data=data_df, aes(x=long, y=lat, group=indv),alpha=0.2)+
+      geom_point(data=data_df, aes(x=long, y=lat, group=indv),alpha=0.1, shape=20)+
+      ggspatial::geom_spatial_path(data = UD_sldf_fort, aes(long,lat, group=group, color=if(colorBy=="trackID"){track}else if(colorBy=="contourLevel"){contour}else if(colorBy=="both"){id}))+ #,size=1
+      scale_colour_manual("",values = rainbow(if(colorBy=="trackID"){length(unique(UD_sldf_fort$track))}else if(colorBy=="contourLevel"){length(unique(UD_sldf_fort$contour))}else if(colorBy=="both"){length(unique(UD_sldf_fort$id))})) #+
     # scale_color_viridis("",option="turbo", discrete=T)#+
     # labs(x="",y="")+
     # theme(axis.text=element_blank(),axis.ticks=element_blank())
-    print(mapF) 
-  })
-  dev.off()
-  
-  # AK: map with average contours
-
-  # prepare SLDF for ggplot
-  UD_sldf_fort_avg <- ggplot2::fortify(UD_sldf_t[UD_sldf_t$individual.local.identifier=="average",])
-  
-  # map for all individuals
-  datamv_df <- data.frame(coordinates(datamv))
-  colnames(datamv_df) <- c("long","lat")
-  datamv_df$indv <- trackId(datamv)
-  map1avg <- get_map(bbox(extent(UD_sldf_t)*1.5), source="stamen")
-  
-  ## OPTION 1: all levels in one plot 
-  mapFavg <- ggmap(map1avg) +
-    geom_path(datamv=datamv_df, aes(x=long, y=lat, group=indv),alpha=0.2)+
-    geom_point(datamv=datamv_df, aes(x=long, y=lat, group=indv),alpha=0.1, shape=20)+
-    ggspatial::geom_spatial_path(datamv = UD_sldf_fort_avg, aes(long,lat, group=group, color=id))+ #,size=1
-    scale_colour_manual("",values = rainbow(length(unique(UD_sldf_fort$id))))
-
-  png(file=paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"),"Avg_UD_ContourMap","_contours_",paste0(cnts,collapse="_"),".png"),res=300,height=2000,width=2000) 
-  print(mapFavg)
-  dev.off()
+    
+    png(file=appArtifactPath(paste0("UD_ContourMap_color_",colorBy,"_contours_",paste0(cnts,collapse="_"),".png")),res=300,height=2000,width=2000) 
+    print(mapF)
+    dev.off()
+    
+    # one map per indiv in 1 pdf, incl. map of average
+    UD_sldf_t_L <- move::split(UD_sldf_t,UD_sldf_t$individual.local.identifier)
+    
+    pdf(appArtifactPath(paste0("UD_ContourMap_per_Indv","_contours_",paste0(cnts,collapse="_"),".pdf")))
+    lapply(UD_sldf_t_L, function(UDcontIndiv){
+      Indv_UD_sldf_fort <- ggplot2::fortify(UDcontIndiv)
+      Indv_UD_sldf_fort$track <- unlist(lapply(strsplit(Indv_UD_sldf_fort$id,"_"),function(x) {x[1]}))
+      Indv_UD_sldf_fort$contour <- unlist(lapply(strsplit(Indv_UD_sldf_fort$id,"_"),function(x) {x[2]}))
+      
+      # map for all individuals
+      Indv_data_df <- data_df[data_df$indv%in%unique(Indv_UD_sldf_fort$track),]
+      map1 <- get_map(bbox(extent(UD_sldf_t)*1.5),maptype="stamen_terrain", source="stadia")
+      
+      mapF <- ggmap(map1) +
+        geom_path(data=Indv_data_df, aes(x=long, y=lat),alpha=0.2)+
+        geom_point(data=Indv_data_df, aes(x=long, y=lat),alpha=0.1, shape=20)+
+        ggspatial::geom_spatial_path(data = Indv_UD_sldf_fort, aes(long,lat, group=group, color=id))+ #,size=1
+        scale_colour_manual("",values = rainbow(length(unique(Indv_UD_sldf_fort$id)))) #+
+      # scale_color_viridis("",option="turbo", discrete=T)#+
+      # labs(x="",y="")+
+      # theme(axis.text=element_blank(),axis.ticks=element_blank())
+      print(mapF) 
+    })
+    dev.off()
+    
+    # AK: map with average contours
+    
+    # prepare SLDF for ggplot
+    UD_sldf_fort_avg <- ggplot2::fortify(UD_sldf_t[UD_sldf_t$individual.local.identifier=="average",])
+    
+    # map for all individuals
+    data_df <- data.frame(coordinates(data))
+    colnames(data_df) <- c("long","lat")
+    data_df$indv <- trackId(data)
+    map1avg <- get_map(bbox(extent(UD_sldf_t)*1.5),maptype="stamen_terrain", source="stadia")
+    
+    ## OPTION 1: all levels in one plot 
+    mapFavg <- ggmap(map1avg) +
+      geom_path(data=data_df, aes(x=long, y=lat, group=indv),alpha=0.2)+
+      geom_point(data=data_df, aes(x=long, y=lat, group=indv),alpha=0.1, shape=20)+
+      ggspatial::geom_spatial_path(data = UD_sldf_fort_avg, aes(long,lat, group=group, color=id))+ #,size=1
+      scale_colour_manual("",values = rainbow(length(unique(UD_sldf_fort$id))))
+    
+    png(file=appArtifactPath(paste0("Avg_UD_ContourMap","_contours_",paste0(cnts,collapse="_"),".png")),res=300,height=2000,width=2000) 
+    print(mapFavg)
+    dev.off()
   ## option1
 
   ## OPTION 2: each levels in a separate plot 
@@ -200,6 +206,6 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   #})
   #dev.off()
   ## option2
-  
+  }
   return(data)
 }
