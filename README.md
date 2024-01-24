@@ -44,7 +44,7 @@ moveStack in Movebank format
 
 `Avg_UD_ContourMap_contours_xxx_xxx_xxx.png`: OpenStreetMap of your tracks with average modelled utilisation probability contour areas as request by the variable `conts`.
 
-### Parameters
+### Settings
 **Spatial resolution for the UD raster (`raster_resol`):** Resolution/grid size of the raster on which to estimate the utilisation distribution. Unit metre. Defaults to 10000 m = 10 km. The adequate grid size is different for each dataset; we suggest having a look at the message in the logs of the App (under "Show Logs") referring to the span of the used data, to make a more informed choice of this parameter. Also see `Null or error handling` below.
 
 **Estimated location error (`loc.err`):** Location error that will be used for the dynamic BBMM estimations. This should typically indicate the maximum estimated or acceptable inaccuracy of your tracking locations. Unit metre. Defaults to 30 m.  Also see `Null or error handling` below.
