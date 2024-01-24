@@ -1,4 +1,4 @@
-# Utilisation Distribution (Dynamic Brownian Bridge)
+# Occurrence Distribution (Dynamic Brownian Bridge)
 MoveApps
 
 Github repository: *github.com/movestore/dynBrownianBridge*
