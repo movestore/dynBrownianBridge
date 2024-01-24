@@ -3,26 +3,31 @@ library('move2')
 library('raster')
 library('sp')
 library('rgdal')
-library('ggmap')
+library('ggmap') #needs installation from github: stadiamaps/ggmap
 library('OpenStreetMap')
 library("ggspatial")
 library("plyr")
+library("dplyr")
+library('zip')
+library('sf')
 # library("viridis")
 
-# data <- readRDS("/home/ascharf/Downloads/Autumn_Migration__Interactive_Map_tmap___2023-03-08_22-03-15.rds")
-# data <- readRDS("./data/raw/input1_move2loc_LatLon.rds")
+# data <- readRDS("./data/raw/input4_move2loc_LatLon.rds")
 # plot(data)
-# raster_resol=100
+# raster_resol=1000
 # loc.err=30
-# conts=c("0.5","0.75","0.99")
-# ext=2000
+# conts=c("0.99") #"0.5","0.75",
+# ext=100000
 # ignoreTimeHrs=6
 # colorBy= "both" #c("trackID", "contourLevel", "both")
 # saveAsSHP=F
+# stamen_key="****"
+
+## ToDo: get rid of "individual.local.identifier" in the code!
+
 
 rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,ignoreTimeHrs=NULL, 
                       colorBy=c("trackID", "contourLevel", "both"), saveAsSHP=TRUE,stamen_key=NULL){
-  Sys.setenv(tz="UTC")
   
   datamv <- moveStack(to_move(data))
   
@@ -56,7 +61,7 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   # calculate first the variance to be able to exclude larger timegaps that increase uncertanty
   datamv_t_dBBvar <- brownian.motion.variance.dyn(datamv_t, location.error=loc.err, margin=11, window.size=31)
   if(!is.null(ignoreTimeHrs)){
-  datamv_t_dBBvar@interest[unlist(timeLag(datamv_t,"hours"))>ignoreTimeHrs] <- FALSE ## excluding segments longer than "ignoreTimeHrs" hours from the dbbmm
+    datamv_t_dBBvar@interest[unlist(timeLag(datamv_t,"hours"))>ignoreTimeHrs] <- FALSE ## excluding segments longer than "ignoreTimeHrs" hours from the dbbmm
   }
   # calculate dBB of the variance
   datamv_t_dBBMM <- brownian.bridge.dyn(datamv_t_dBBvar, raster = Ra,  window.size = 31, margin=11, time.step = timeStep, location.error = rep(loc.err,length(datamv_t_dBBvar)), verbose=F)
@@ -73,9 +78,10 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   ## get min countur size for avg UD
   mV <- minValue(datamv_t_UD_av) ## if the cnts contain values smaller than the min value of the avg raster it gives the error: "rasterToContour(datamv_t_UD_av, levels = ctr) : no contour lines"
   rmV <- plyr::round_any((mV+0.05), accuracy = 0.01, f = ceiling)
-  if(any(cnts<mV)){
+  if(any(cnts<mV | min(cnts)==mV)){
     logger.warn(paste0("Smallest UD contour for the average UD is: ", rmV,". All smaller UD contours selected in the settings can not be displayed on the average UD map. The smallest possible (",rmV ,") plus all larger ones will be displayed. The countur of ",rmV," will be added to the Table of UD sizes"))
     cntsAvg <- c(cnts[cnts>=mV], rmV) # adding the minimum available
+    if(min(cnts)==mV){cntsAvg <- cntsAvg[!cntsAvg%in%min(cnts)]} # this contour gives error in ~L102
     cntsAvg <- cntsAvg[order(cntsAvg)]
     cntsAvg <- cntsAvg[!duplicated(cntsAvg)]
   }else{cntsAvg <- cnts}
@@ -98,8 +104,8 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   UD_sldf <- raster2contour(datamv_t_dBBMM, level=cnts)
   
   # get contours into a SLDF object of avg layer
-   avg_sldf_L <- lapply(cntsAvg, function(ctr){
-     print(ctr)
+  avg_sldf_L <- lapply(cntsAvg, function(ctr){
+    print(ctr)
     rasterToContour(datamv_t_UD_av, levels=ctr)
   })
   avg_sldf <- do.call("rbind",avg_sldf_L)
@@ -113,12 +119,19 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   UD_sldf_t <- spTransform(UD_sldf,CRS("+proj=longlat"))
   
   # save contour as shp
-  if(saveAsSHP){writeOGR(UD_sldf_t, dsn=appArtifactPath, layer=paste0("UD_contour:",paste0(cnts,collapse="_")), driver="ESRI Shapefile", overwrite_layer=TRUE)}
+  if(saveAsSHP){
+    dir.create(targetDirFiles <- tempdir())
+    writeOGR(UD_sldf_t, dsn=targetDirFiles, layer=paste0("UD_contour:",paste0(cnts,collapse="_")), driver="ESRI Shapefile", overwrite_layer=TRUE)
+    zip_file <- appArtifactPath(paste0("UD_contour:",paste0(cnts,collapse="_"),".zip"))
+    zip::zip(zip_file, 
+             files = list.files(targetDirFiles, full.names = TRUE),
+             mode = "cherry-pick")
+  }
   
-  # prepare SLDF for ggplot
-  UD_sldf_fort <- ggplot2::fortify(UD_sldf_t[!UD_sldf_t$individual.local.identifier=="average",]) #for stack of individual plots leave out average
-  UD_sldf_fort$track <- unlist(lapply(strsplit(UD_sldf_fort$id,"_"),function(x) {paste0(x[1:length(x)-1], collapse="_")}))
-  UD_sldf_fort$contour <- unlist(lapply(strsplit(UD_sldf_fort$id,"_"),function(x) {x[length(x)]}))
+  # convert to sf (sldf is deprecated in ggplot)
+  UD_sf <- st_as_sf(UD_sldf_t)
+  UD_sf$id <- paste0(UD_sf$individual.local.identifier,"_",UD_sf$level)
+  UD_sf <- UD_sf%>%dplyr::filter(!individual.local.identifier == "average")
   
   # map for all individuals
   datamv_df <- data.frame(coordinates(datamv))
@@ -129,13 +142,15 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
     register_stadiamaps(stamen_key)
     
     logger.info("Your stadia API key is registered.")
+    
     map1 <- get_map(bbox(extent(UD_sldf_t)*1.5),maptype="stamen_terrain", source="stadia")
     
     mapF <- ggmap(map1) +
-      geom_path(data=data_df, aes(x=long, y=lat, group=indv),alpha=0.2)+
-      geom_point(data=data_df, aes(x=long, y=lat, group=indv),alpha=0.1, shape=20)+
-      ggspatial::geom_spatial_path(data = UD_sldf_fort, aes(long,lat, group=group, color=if(colorBy=="trackID"){track}else if(colorBy=="contourLevel"){contour}else if(colorBy=="both"){id}))+ #,size=1
-      scale_colour_manual("",values = rainbow(if(colorBy=="trackID"){length(unique(UD_sldf_fort$track))}else if(colorBy=="contourLevel"){length(unique(UD_sldf_fort$contour))}else if(colorBy=="both"){length(unique(UD_sldf_fort$id))})) #+
+      geom_path(data=datamv_df, aes(x=long, y=lat, group=indv),alpha=0.2)+
+      geom_point(data=datamv_df, aes(x=long, y=lat, group=indv),alpha=0.1, shape=20)+
+      annotation_spatial(data = UD_sf, aes(color=if(colorBy=="trackID"){individual.local.identifier}else if(colorBy=="contourLevel"){level}else if(colorBy=="both"){id}))+ #,size=1
+      scale_colour_manual("",values = rainbow(if(colorBy=="trackID"){length(unique(UD_sf$individual.local.identifier))}else if(colorBy=="contourLevel"){length(unique(UD_sf$level))}else if(colorBy=="both"){length(unique(UD_sf$id))}))
+    #+
     # scale_color_viridis("",option="turbo", discrete=T)#+
     # labs(x="",y="")+
     # theme(axis.text=element_blank(),axis.ticks=element_blank())
@@ -145,23 +160,19 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
     dev.off()
     
     # one map per indiv in 1 pdf, incl. map of average
-    UD_sldf_t_L <- move::split(UD_sldf_t,UD_sldf_t$individual.local.identifier)
+    UF_sf_L <- split(UD_sf,UD_sf$individual.local.identifier)
     
     pdf(appArtifactPath(paste0("UD_ContourMap_per_Indv","_contours_",paste0(cnts,collapse="_"),".pdf")))
-    lapply(UD_sldf_t_L, function(UDcontIndiv){
-      Indv_UD_sldf_fort <- ggplot2::fortify(UDcontIndiv)
-      Indv_UD_sldf_fort$track <- unlist(lapply(strsplit(Indv_UD_sldf_fort$id,"_"),function(x) {x[1]}))
-      Indv_UD_sldf_fort$contour <- unlist(lapply(strsplit(Indv_UD_sldf_fort$id,"_"),function(x) {x[2]}))
-      
+    lapply(UF_sf_L, function(UDcontIndiv){
       # map for all individuals
-      Indv_data_df <- data_df[data_df$indv%in%unique(Indv_UD_sldf_fort$track),]
+      Indv_datamv_df <- datamv_df[datamv_df$indv%in%unique(UDcontIndiv$individual.local.identifier),]
       map1 <- get_map(bbox(extent(UD_sldf_t)*1.5),maptype="stamen_terrain", source="stadia")
       
       mapF <- ggmap(map1) +
-        geom_path(data=Indv_data_df, aes(x=long, y=lat),alpha=0.2)+
-        geom_point(data=Indv_data_df, aes(x=long, y=lat),alpha=0.1, shape=20)+
-        ggspatial::geom_spatial_path(data = Indv_UD_sldf_fort, aes(long,lat, group=group, color=id))+ #,size=1
-        scale_colour_manual("",values = rainbow(length(unique(Indv_UD_sldf_fort$id)))) #+
+        geom_path(data=Indv_datamv_df, aes(x=long, y=lat),alpha=0.2)+
+        geom_point(data=Indv_datamv_df, aes(x=long, y=lat),alpha=0.1, shape=20)+
+        annotation_spatial(data = UDcontIndiv, aes(color=id))+ #,size=1
+        scale_colour_manual("",values = rainbow(length(unique(UDcontIndiv$id)))) #+
       # scale_color_viridis("",option="turbo", discrete=T)#+
       # labs(x="",y="")+
       # theme(axis.text=element_blank(),axis.ticks=element_blank())
@@ -171,41 +182,44 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
     
     # AK: map with average contours
     
-    # prepare SLDF for ggplot
-    UD_sldf_fort_avg <- ggplot2::fortify(UD_sldf_t[UD_sldf_t$individual.local.identifier=="average",])
+    UD_sf_avg <- st_as_sf(UD_sldf_t)
+    UD_sf_avg$id <- paste0(UD_sf_avg$individual.local.identifier,"_",UD_sf_avg$level)
+    UD_sf_avg <- UD_sf_avg%>%dplyr::filter(individual.local.identifier == "average")
     
     # map for all individuals
-    data_df <- data.frame(coordinates(data))
-    colnames(data_df) <- c("long","lat")
-    data_df$indv <- trackId(data)
+    datamv_df <- data.frame(coordinates(datamv))
+    colnames(datamv_df) <- c("long","lat")
+    datamv_df$indv <- trackId(datamv)
     map1avg <- get_map(bbox(extent(UD_sldf_t)*1.5),maptype="stamen_terrain", source="stadia")
     
     ## OPTION 1: all levels in one plot 
     mapFavg <- ggmap(map1avg) +
-      geom_path(data=data_df, aes(x=long, y=lat, group=indv),alpha=0.2)+
-      geom_point(data=data_df, aes(x=long, y=lat, group=indv),alpha=0.1, shape=20)+
-      ggspatial::geom_spatial_path(data = UD_sldf_fort_avg, aes(long,lat, group=group, color=id))+ #,size=1
-      scale_colour_manual("",values = rainbow(length(unique(UD_sldf_fort$id))))
+      geom_path(data=datamv_df, aes(x=long, y=lat, group=indv),alpha=0.2)+
+      geom_point(data=datamv_df, aes(x=long, y=lat, group=indv),alpha=0.1, shape=20)+
+      annotation_spatial(data = UD_sf_avg, aes(color=id))+ #,size=1
+      scale_colour_manual("",values = rainbow(length(unique(UD_sf_avg$id))))
     
     png(file=appArtifactPath(paste0("Avg_UD_ContourMap","_contours_",paste0(cnts,collapse="_"),".png")),res=300,height=2000,width=2000) 
     print(mapFavg)
     dev.off()
-  ## option1
-
-  ## OPTION 2: each levels in a separate plot 
-  #UD_sldf_fort_L <- split(UD_sldf_fort_avg, UD_sldf_fort_avg$id)
-  #pdf(paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"), "Avg_UD_ContourMap2","_contours_",paste0(cnts,collapse="_"),".pdf")) 
-  #lapply(UD_sldf_fort_L, function(avgCont){
-  
-  #  mapFavg <- ggmap(map1avg) +
-  #    geom_path(datamv=datamv_df, aes(x=long, y=lat, group=indv),alpha=0.2)+
-  #    geom_point(datamv=datamv_df, aes(x=long, y=lat, group=indv),alpha=0.1, shape=20)+
-  #    ggspatial::geom_spatial_path(datamv = avgCont, aes(long,lat, group=group, color=id))+ #,size=1
-  #    scale_colour_manual("",values = rainbow(length(unique(UD_sldf_fort$id))))
-  #  print(mapFavg) 
-  #})
-  #dev.off()
-  ## option2
+    
+    ## option1
+    
+    ## OPTION 2: each levels in a separate plot 
+    #UD_sldf_fort_L <- split(UD_sldf_fort_avg, UD_sldf_fort_avg$id)
+    #pdf(paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"), "Avg_UD_ContourMap2","_contours_",paste0(cnts,collapse="_"),".pdf")) 
+    #lapply(UD_sldf_fort_L, function(avgCont){
+    
+    #  mapFavg <- ggmap(map1avg) +
+    #    geom_path(datamv=datamv_df, aes(x=long, y=lat, group=indv),alpha=0.2)+
+    #    geom_point(datamv=datamv_df, aes(x=long, y=lat, group=indv),alpha=0.1, shape=20)+
+    #    ggspatial::geom_spatial_path(datamv = avgCont, aes(long,lat, group=group, color=id))+ #,size=1
+    #    scale_colour_manual("",values = rainbow(length(unique(UD_sldf_fort$id))))
+    #  print(mapFavg) 
+    #})
+    #dev.off()
+    ## option2
+    
   }
   return(data)
 }

@@ -1,8 +1,8 @@
 {
-    "raster_resol":100,
+    "raster_resol":1000,
     "loc.err":30,
-    "conts":0.999,
-    "ext":20000,
+    "conts":"0.999",
+    "ext":100000,
     "ignoreTimeHrs":6, 
     "colorBy":"both", 
     "saveAsSHP":true
