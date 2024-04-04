@@ -1,4 +1,4 @@
-# Utilisation Distribution (Dynamic Brownian Bridge)
+# Occurrence Distribution (Dynamic Brownian Bridge)
 MoveApps
 
 Github repository: *github.com/movestore/dynBrownianBridge*
@@ -28,10 +28,10 @@ The settings of this App are very dependent on the input data. While the App set
   - The `raster resolution` will provide the level of detail at which the results are provided. Fine raster resolutions (smaller raster resolution/pixel size, e.g., 100 m vs 1 km) will provide significantly more detail about where the animal spent more or less time. The smaller the pixel size, the longer the calculation will take; the larger the pixel size, the coarser the results (the contour lines will display "steps"); and if the size is too large, an error will occur (see Section [Most common errors](#most-common-errors)).
 
 ### Input data
-moveStack in Movebank format
+move2_loc
 
 ### Output data
-moveStack in Movebank format
+move2_loc
 
 ### Artefacts
 `UD_size_per_contour.csv`: table containing the UD size in km^2 per contour, for each track and as an average 
@@ -44,7 +44,7 @@ moveStack in Movebank format
 
 `Avg_UD_ContourMap_contours_xxx_xxx_xxx.png`: OpenStreetMap of your tracks with average modelled utilisation probability contour areas as request by the variable `conts`.
 
-### Parameters
+### Settings
 **Spatial resolution for the UD raster (`raster_resol`):** Resolution/grid size of the raster on which to estimate the utilisation distribution. Unit metre. Defaults to 10000 m = 10 km. The adequate grid size is different for each dataset; we suggest having a look at the message in the logs of the App (under "Show Logs") referring to the span of the used data, to make a more informed choice of this parameter. Also see `Null or error handling` below.
 
 **Estimated location error (`loc.err`):** Location error that will be used for the dynamic BBMM estimations. This should typically indicate the maximum estimated or acceptable inaccuracy of your tracking locations. Unit metre. Defaults to 30 m.  Also see `Null or error handling` below.

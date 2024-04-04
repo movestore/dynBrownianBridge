@@ -1,4 +1,5 @@
 {
+  "version":"1.1",
   "settings": [
 	{
       "id": "raster_resol",
@@ -72,30 +73,16 @@
   ],
   "dependencies": {
     "R": [
-      {
-        "name": "move"
-      },
-	  {
-        "name": "raster"
-      },
-	  {
-        "name": "sp"
-      },
-	  {
-        "name": "rgdal"
-      },
-	  {
-        "name": "ggmap"
-      },
-	  {
-        "name": "OpenStreetMap"
-      },
-      {
-        "name": "ggspatial"
-      },
-      {
-        "name":"plyr"
-      }
+      {"name":"move"},
+      {"name":"raster"},
+      {"name":"sp"},
+      {"name":"rgdal"},
+      {"name":"ggmap"},
+      {"name":"OpenStreetMap"},
+      {"name":"ggspatial"},
+      {"name":"plyr"},
+      {"name":"zip"},
+      {"name":"sf"}
     ]
   },
   "createsArtifacts": true,
@@ -144,8 +131,5 @@
     "note": "Kranstauber, B., Kays, R., LaPoint, S. D., Wikelski, M., & Safi, K. (2012). A dynamic Brownian bridge movement model to estimate utilization distributions for heterogeneous animal movement. Journal of Animal Ecology, 81(4), 738-746.",
     "url": "https://doi.org/10.1111/j.1365-2656.2012.01955.x" 
     }
-  ],
-  "documentation": {
-    "url": "https://github.com/movestore/dynBrownianBridge/blob/main/README.md"
-  }
+  ]
 }
