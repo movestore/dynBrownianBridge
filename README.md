@@ -28,10 +28,10 @@ The settings of this App are very dependent on the input data. While the App set
   - The `raster resolution` will provide the level of detail at which the results are provided. Fine raster resolutions (smaller raster resolution/pixel size, e.g., 100 m vs 1 km) will provide significantly more detail about where the animal spent more or less time. The smaller the pixel size, the longer the calculation will take; the larger the pixel size, the coarser the results (the contour lines will display "steps"); and if the size is too large, an error will occur (see Section [Most common errors](#most-common-errors)).
 
 ### Input data
-moveStack in Movebank format
+move2_loc
 
 ### Output data
-moveStack in Movebank format
+move2_loc
 
 ### Artefacts
 `UD_size_per_contour.csv`: table containing the UD size in km^2 per contour, for each track and as an average 
