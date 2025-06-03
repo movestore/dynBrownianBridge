@@ -2,32 +2,44 @@ library('move')
 library('move2')
 library('raster')
 library('sp')
-library('rgdal')
-library('ggmap') #needs installation from github: stadiamaps/ggmap
-library('OpenStreetMap')
+# library('rgdal')
+# library('ggmap') #needs installation from github: stadiamaps/ggmap
+# # library('OpenStreetMap')
 library("ggspatial")
-library("plyr")
-library("dplyr")
-library('zip')
+library("ggplot2")
+# library("plyr")
+# library("dplyr")
+# library('zip')
 library('sf')
-# library("viridis")
+library("scales")
+# # library("viridis")
+# library(plotly)
+# library(htmlwidgets)
 
-# data <- readRDS("./data/raw/input4_move2loc_LatLon.rds")
+# data <- readRDS("./data/raw/input1_move2loc_LatLon.rds")
 # plot(data)
-# raster_resol=1000
+# raster_resol=100
 # loc.err=30
-# conts=c("0.99") #"0.5","0.75",
-# ext=100000
+# conts=c("0.50","0.999") #"0.5","0.75",
+# ext=10000
 # ignoreTimeHrs=6
 # colorBy= "both" #c("trackID", "contourLevel", "both")
 # saveAsSHP=F
-# stamen_key="****"
+# # stamen_key="****"
+# mymtype="osm"
+# myzoom= -1
 
-## ToDo: get rid of "individual.local.identifier" in the code!
+## "individual.local.identifier" comes from the move object, the track id is assigned to it
+## ToDo:
+# - in pdf of individual plots make sure all contures have the same color
+## make option stadia, if null, osm?
+
+## add posibility to download all as a http
 
 
 rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,ignoreTimeHrs=NULL, 
-                      colorBy=c("trackID", "contourLevel", "both"), saveAsSHP=TRUE,stamen_key=NULL){
+                      colorBy=c("trackID", "contourLevel", "both"), saveAsSHP=TRUE,mymtype="osm",
+                      myzoom= -1){
   
   datamv <- moveStack(to_move(data))
   
@@ -68,33 +80,15 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   
   # get UDs for all
   datamv_t_UD <- getVolumeUD(datamv_t_dBBMM) 
-  
-  # AK: calculate average UD for all tracks together ("population average")
-  datamv_t_UD_av <- stackApply(datamv_t_UD,indices=rep(1,dim(datamv_t_UD)[3]),fun="mean") # this seems to make sense, and also table of UD sizes make sense
-  # plot(datamv_t_UD_av); contour(datamv_t_UD_av, level=0.99, add=T)
-  datamv_t_UD_pav <- stack(datamv_t_UD,datamv_t_UD_av) #add the average raster layer to the indiv UDs, then can run this through your lapply for the UD sizes..
-  names(datamv_t_UD_pav)[dim(datamv_t_UD)[3]+1] <- "average"
-  
-  ## get min countur size for avg UD
-  mV <- minValue(datamv_t_UD_av) ## if the cnts contain values smaller than the min value of the avg raster it gives the error: "rasterToContour(datamv_t_UD_av, levels = ctr) : no contour lines"
-  rmV <- plyr::round_any((mV+0.05), accuracy = 0.01, f = ceiling)
-  if(any(cnts<mV | min(cnts)==mV)){
-    logger.warn(paste0("Smallest UD contour for the average UD is: ", rmV,". All smaller UD contours selected in the settings can not be displayed on the average UD map. The smallest possible (",rmV ,") plus all larger ones will be displayed. The countur of ",rmV," will be added to the Table of UD sizes"))
-    cntsAvg <- c(cnts[cnts>=mV], rmV) # adding the minimum available
-    if(min(cnts)==mV){cntsAvg <- cntsAvg[!cntsAvg%in%min(cnts)]} # this contour gives error in ~L102
-    cntsAvg <- cntsAvg[order(cntsAvg)]
-    cntsAvg <- cntsAvg[!duplicated(cntsAvg)]
-  }else{cntsAvg <- cnts}
-  
+
   # get UD size in Km2 per contour
-  # AK: adapted here datamv_t_UD to datamv_t_UD_pav, so that also the contour sizes of the average UD is in
-  cntsSize <- c(cnts,rmV) ## adding the smallest possible of the avg UD, better have more than less, right?
+  cntsSize <- cnts
   cntsSize <- cntsSize[order(cntsSize)] 
   UD_size_L <- lapply(cntsSize, function(ctr){
-    UDsel <- datamv_t_UD_pav<=ctr 
+    UDsel <- datamv_t_UD<=ctr 
     UDsizem2 <- cellStats(UDsel, 'sum')*raster_resol*raster_resol
     UDsizeKm2 <- UDsizem2/1000000
-    df <- data.frame(trackID=names(datamv_t_UD_pav), UD_size_Km2=UDsizeKm2, contour=ctr, row.names = NULL) # add individualID and TrackID in the future? ## contour 0.05 is always added, odd....
+    df <- data.frame(trackID=names(datamv_t_UD), UD_size_Km2=UDsizeKm2, contour=ctr, row.names = NULL) # add individualID and TrackID in the future? ## contour 0.05 is always added, odd....
     return(df)
   })
   UD_size_df <- do.call("rbind",UD_size_L) #what does this give? the sizes of all contours for each track? YES, each row is a track, a contour level, and its UD size in Km2. each combi track-contour gets its own row and ud size value
@@ -103,60 +97,76 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   # get contours into a SLDF object
   UD_sldf <- raster2contour(datamv_t_dBBMM, level=cnts)
   
-  # get contours into a SLDF object of avg layer
-  avg_sldf_L <- lapply(cntsAvg, function(ctr){
-    print(ctr)
-    rasterToContour(datamv_t_UD_av, levels=ctr)
-  })
-  avg_sldf <- do.call("rbind",avg_sldf_L)
-  avg_sldf$individual.local.identifier <- "average"
-  # joining both
-  UD_sldf <- rbind(UD_sldf,avg_sldf)
-  
   # changing ID names of the SLDF as the default ones cannot be interpreted
   UD_sldf <-  spChFIDs(UD_sldf, as.character(paste0(UD_sldf$individual.local.identifier,"_",UD_sldf$level))) 
   
   UD_sldf_t <- spTransform(UD_sldf,CRS("+proj=longlat"))
   
+  ####ToDo --Save as GeoPackage
   # save contour as shp
+  # if(saveAsSHP){
+  #   dir.create(targetDirFiles <- tempdir())
+  #   writeOGR(UD_sldf_t, dsn=targetDirFiles, layer=paste0("UD_contour:",paste0(cnts,collapse="_")), driver="ESRI Shapefile", overwrite_layer=TRUE)
+  #   zip_file <- appArtifactPath(paste0("UD_contour:",paste0(cnts,collapse="_"),".zip"))
+  #   zip::zip(zip_file, 
+  #            files = list.files(targetDirFiles, full.names = TRUE),
+  #            mode = "cherry-pick")
+  # }
+  
+  ###download UD as GeoPackage (GPKG)
   if(saveAsSHP){
-    dir.create(targetDirFiles <- tempdir())
-    writeOGR(UD_sldf_t, dsn=targetDirFiles, layer=paste0("UD_contour:",paste0(cnts,collapse="_")), driver="ESRI Shapefile", overwrite_layer=TRUE)
-    zip_file <- appArtifactPath(paste0("UD_contour:",paste0(cnts,collapse="_"),".zip"))
-    zip::zip(zip_file, 
-             files = list.files(targetDirFiles, full.names = TRUE),
-             mode = "cherry-pick")
+    UD_sldf_t_sf <- st_as_sf(UD_sldf_t)
+      st_write(UD_sldf_t_sf, appArtifactPath(paste0("UD_contour_",paste0(cnts,collapse="_"),".gpkg")), driver = "GPKG", delete_dsn = TRUE)
   }
   
   # convert to sf (sldf is deprecated in ggplot)
   UD_sf <- st_as_sf(UD_sldf_t)
   UD_sf$id <- paste0(UD_sf$individual.local.identifier,"_",UD_sf$level)
-  UD_sf <- UD_sf%>%dplyr::filter(!individual.local.identifier == "average")
+  # UD_sf <- UD_sf%>%dplyr::filter(!individual.local.identifier == "average")
   
-  # map for all individuals
-  datamv_df <- data.frame(coordinates(datamv))
-  colnames(datamv_df) <- c("long","lat")
-  datamv_df$indv <- trackId(datamv)
+  # # map for all individuals
+  # datamv_df <- data.frame(coordinates(datamv))
+  # colnames(datamv_df) <- c("long","lat")
+  # datamv_df$indv <- trackId(datamv)
   
-  if (is.null(stamen_key)) {logger.info("You have not entered a stadia API key. Until MoveApps provides its OSM mirror, this is required. Register with stamen until then, it is free. Go to: https://stadiamaps.com/stamen/onboarding/create-account")} else {
-    register_stadiamaps(stamen_key)
-    
-    logger.info("Your stadia API key is registered.")
-    
-    map1 <- get_map(bbox(extent(UD_sldf_t)*1.5),maptype="stamen_terrain", source="stadia")
-    
-    mapF <- ggmap(map1) +
-      geom_path(data=datamv_df, aes(x=long, y=lat, group=indv),alpha=0.2)+
-      geom_point(data=datamv_df, aes(x=long, y=lat, group=indv),alpha=0.1, shape=20)+
-      annotation_spatial(data = UD_sf, aes(color=if(colorBy=="trackID"){individual.local.identifier}else if(colorBy=="contourLevel"){level}else if(colorBy=="both"){id}))+ #,size=1
-      scale_colour_manual("",values = rainbow(if(colorBy=="trackID"){length(unique(UD_sf$individual.local.identifier))}else if(colorBy=="contourLevel"){length(unique(UD_sf$level))}else if(colorBy=="both"){length(unique(UD_sf$id))}))
-    #+
+  ud_bbox <- sf::st_bbox(UD_sf)
+  
+  osmap_clrby <- ggplot() +
+    ggspatial::annotation_map_tile(zoomin = as.numeric(myzoom), type=mymtype) +
+    ggspatial::annotation_scale(aes(location="br")) +
+    theme_linedraw() +
+    # geom_path(data=datamv_df, aes(x=long, y=lat, group=indv),alpha=0.2)+
+    # geom_point(data=datamv_df, aes(x=long, y=lat, group=indv),alpha=0.1, shape=20)+
+    geom_sf(data = mt_track_lines(data),color=alpha("black",0.25)) +
+    geom_sf(data = data, color = alpha("black",0.25), size = 1)+
+    annotation_spatial(data = UD_sf, aes(color=if(colorBy=="trackID"){individual.local.identifier}else if(colorBy=="contourLevel"){level}else if(colorBy=="both"){id}))+ #,size=1
+    scale_colour_manual("",values = rainbow(if(colorBy=="trackID"){length(unique(UD_sf$individual.local.identifier))}else if(colorBy=="contourLevel"){length(unique(UD_sf$level))}else if(colorBy=="both"){length(unique(UD_sf$id))}))+
+    coord_sf(
+      xlim = c(ud_bbox["xmin"], ud_bbox["xmax"]),
+      ylim = c(ud_bbox["ymin"], ud_bbox["ymax"]),
+      crs=st_crs(UD_sf),expand = T)
+  
+  
+  
+  # if (is.null(stamen_key)) {logger.info("You have not entered a stadia API key. Until MoveApps provides its OSM mirror, this is required. Register with stamen until then, it is free. Go to: https://stadiamaps.com/stamen/onboarding/create-account")} else {
+  #   register_stadiamaps(stamen_key)
+  #   
+  #   logger.info("Your stadia API key is registered.")
+  #   
+  #   map1 <- get_map(bbox(extent(UD_sldf_t)*1.5),maptype="stamen_terrain", source="stadia")
+  #   
+  #   mapF <- ggmap(map1) +
+  #     geom_path(data=datamv_df, aes(x=long, y=lat, group=indv),alpha=0.2)+
+  #     geom_point(data=datamv_df, aes(x=long, y=lat, group=indv),alpha=0.1, shape=20)+
+  #     annotation_spatial(data = UD_sf, aes(color=if(colorBy=="trackID"){individual.local.identifier}else if(colorBy=="contourLevel"){level}else if(colorBy=="both"){id}))+ #,size=1
+  #     scale_colour_manual("",values = rainbow(if(colorBy=="trackID"){length(unique(UD_sf$individual.local.identifier))}else if(colorBy=="contourLevel"){length(unique(UD_sf$level))}else if(colorBy=="both"){length(unique(UD_sf$id))}))
+  #   #+
     # scale_color_viridis("",option="turbo", discrete=T)#+
     # labs(x="",y="")+
     # theme(axis.text=element_blank(),axis.ticks=element_blank())
     
     png(file=appArtifactPath(paste0("UD_ContourMap_color_",colorBy,"_contours_",paste0(cnts,collapse="_"),".png")),res=300,height=2000,width=2000) 
-    print(mapF)
+    print(osmap_clrby)
     dev.off()
     
     # one map per indiv in 1 pdf, incl. map of average
@@ -165,61 +175,41 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
     pdf(appArtifactPath(paste0("UD_ContourMap_per_Indv","_contours_",paste0(cnts,collapse="_"),".pdf")))
     lapply(UF_sf_L, function(UDcontIndiv){
       # map for all individuals
-      Indv_datamv_df <- datamv_df[datamv_df$indv%in%unique(UDcontIndiv$individual.local.identifier),]
-      map1 <- get_map(bbox(extent(UD_sldf_t)*1.5),maptype="stamen_terrain", source="stadia")
+      # Indv_datamv_df <- datamv_df[datamv_df$indv%in%unique(UDcontIndiv$individual.local.identifier),]
+      Indv_data <- filter_track_data(data, .track_id = c(unique(UDcontIndiv$individual.local.identifier)))
+     
+      udI_bbox <- sf::st_bbox(UDcontIndiv)
+      osmapInd <- ggplot() +
+        ggspatial::annotation_map_tile(zoomin = as.numeric(myzoom), type=mymtype) +
+        ggspatial::annotation_scale(aes(location="br")) +
+        theme_linedraw() +
+        # geom_path(data=datamv_df, aes(x=long, y=lat, group=indv),alpha=0.2)+
+        # geom_point(data=datamv_df, aes(x=long, y=lat, group=indv),alpha=0.1, shape=20)+
+        geom_sf(data = mt_track_lines(Indv_data),color=alpha("black",0.25)) +
+        geom_sf(data = Indv_data, color = alpha("black",0.25), size = 1)+
+          annotation_spatial(data = UDcontIndiv, aes(color=id))+ #,size=1
+          scale_colour_manual("",values = rainbow(length(unique(UDcontIndiv$id))))+
+        coord_sf(
+          xlim = c(udI_bbox["xmin"], udI_bbox["xmax"]),
+          ylim = c(udI_bbox["ymin"], udI_bbox["ymax"]),
+          crs=st_crs(UDcontIndiv),expand = T)
+        # annotation_spatial(data = UDcontIndiv, aes(color=if(colorBy=="trackID"){individual.local.identifier}else if(colorBy=="contourLevel"){level}else if(colorBy=="both"){id}))+ #,size=1
+        # scale_colour_manual("",values = rainbow(if(colorBy=="trackID"){length(unique(UDcontIndiv$individual.local.identifier))}else if(colorBy=="contourLevel"){length(unique(UDcontIndiv$level))}else if(colorBy=="both"){length(unique(UDcontIndiv$id))}))
       
-      mapF <- ggmap(map1) +
-        geom_path(data=Indv_datamv_df, aes(x=long, y=lat),alpha=0.2)+
-        geom_point(data=Indv_datamv_df, aes(x=long, y=lat),alpha=0.1, shape=20)+
-        annotation_spatial(data = UDcontIndiv, aes(color=id))+ #,size=1
-        scale_colour_manual("",values = rainbow(length(unique(UDcontIndiv$id)))) #+
-      # scale_color_viridis("",option="turbo", discrete=T)#+
-      # labs(x="",y="")+
-      # theme(axis.text=element_blank(),axis.ticks=element_blank())
-      print(mapF) 
+      # map1 <- get_map(bbox(extent(UD_sldf_t)*1.5),maptype="stamen_terrain", source="stadia")
+      # 
+      # mapF <- ggmap(map1) +
+      #   geom_path(data=Indv_datamv_df, aes(x=long, y=lat),alpha=0.2)+
+      #   geom_point(data=Indv_datamv_df, aes(x=long, y=lat),alpha=0.1, shape=20)+
+      #   annotation_spatial(data = UDcontIndiv, aes(color=id))+ #,size=1
+      #   scale_colour_manual("",values = rainbow(length(unique(UDcontIndiv$id)))) #+
+      # # scale_color_viridis("",option="turbo", discrete=T)#+
+      # # labs(x="",y="")+
+      # # theme(axis.text=element_blank(),axis.ticks=element_blank())
+      print(osmapInd) 
     })
     dev.off()
     
-    # AK: map with average contours
-    
-    UD_sf_avg <- st_as_sf(UD_sldf_t)
-    UD_sf_avg$id <- paste0(UD_sf_avg$individual.local.identifier,"_",UD_sf_avg$level)
-    UD_sf_avg <- UD_sf_avg%>%dplyr::filter(individual.local.identifier == "average")
-    
-    # map for all individuals
-    datamv_df <- data.frame(coordinates(datamv))
-    colnames(datamv_df) <- c("long","lat")
-    datamv_df$indv <- trackId(datamv)
-    map1avg <- get_map(bbox(extent(UD_sldf_t)*1.5),maptype="stamen_terrain", source="stadia")
-    
-    ## OPTION 1: all levels in one plot 
-    mapFavg <- ggmap(map1avg) +
-      geom_path(data=datamv_df, aes(x=long, y=lat, group=indv),alpha=0.2)+
-      geom_point(data=datamv_df, aes(x=long, y=lat, group=indv),alpha=0.1, shape=20)+
-      annotation_spatial(data = UD_sf_avg, aes(color=id))+ #,size=1
-      scale_colour_manual("",values = rainbow(length(unique(UD_sf_avg$id))))
-    
-    png(file=appArtifactPath(paste0("Avg_UD_ContourMap","_contours_",paste0(cnts,collapse="_"),".png")),res=300,height=2000,width=2000) 
-    print(mapFavg)
-    dev.off()
-    
-    ## option1
-    
-    ## OPTION 2: each levels in a separate plot 
-    #UD_sldf_fort_L <- split(UD_sldf_fort_avg, UD_sldf_fort_avg$id)
-    #pdf(paste0(Sys.getenv(x = "APP_ARTIFACTS_DIR", "/tmp/"), "Avg_UD_ContourMap2","_contours_",paste0(cnts,collapse="_"),".pdf")) 
-    #lapply(UD_sldf_fort_L, function(avgCont){
-    
-    #  mapFavg <- ggmap(map1avg) +
-    #    geom_path(datamv=datamv_df, aes(x=long, y=lat, group=indv),alpha=0.2)+
-    #    geom_point(datamv=datamv_df, aes(x=long, y=lat, group=indv),alpha=0.1, shape=20)+
-    #    ggspatial::geom_spatial_path(datamv = avgCont, aes(long,lat, group=group, color=id))+ #,size=1
-    #    scale_colour_manual("",values = rainbow(length(unique(UD_sldf_fort$id))))
-    #  print(mapFavg) 
-    #})
-    #dev.off()
-    ## option2
-    
-  }
+# }
   return(data)
 }
