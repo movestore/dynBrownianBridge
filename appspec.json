@@ -97,7 +97,8 @@
       {"name":"ggspatial"},
       {"name":"ggplot2"},
       {"name":"sf"},
-      {"name":"scales"}
+      {"name":"scales"},
+      {"name":"prettymapr"}
     ]
   },
   "createsArtifacts": true,

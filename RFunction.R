@@ -6,6 +6,7 @@ library("ggspatial")
 library("ggplot2")
 library('sf')
 library("scales")
+library("prettymapr")
 
 
 # data <- readRDS("./data/raw/fishers.rds")
