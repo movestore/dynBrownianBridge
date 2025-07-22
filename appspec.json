@@ -55,34 +55,49 @@
       "displayText": "By trackID and contour level"
     }]
     },
+
+{
+  "id": "myzoom",
+  "name": "Resolution of background map",
+  "description": "Choose the resolution of the map",
+  "defaultValue": "-2",
+  "type": "RADIOBUTTONS",
+  "options": [{
+      "value": "-2",
+      "displayText": "very low"
+    },
     {
+      "value": "-1",
+      "displayText": "low"
+    },
+    {
+      "value": "0",
+      "displayText": "high"
+    },
+    {
+      "value": "1",
+      "displayText": "very high"
+    }]
+},
+{
   "id": "saveAsSHP",
-  "name": "Save as Shapefile",
-  "description": "Select if you want the results to include a shapefile containing the calculated contours.",
+  "name": "Save as GeoPackage Shapefile",
+  "description": "Select if you want the results to include a shapefile (GeoPackage (GPKG)) containing the calculated contours. ",
   "type": "CHECKBOX",
   "defaultValue": true
-},
-	{
-      "id": "stamen_key",
-      "name": "Stadia API key",
-      "description": "For visualisation of the tracks on map background you need to enter an API key from stadia here. Note that this is only a workaround for a few months until MoveApps provides an own OSM mirror. Register for a stadia API key here, it is free: https://stadiamaps.com/stamen/onboarding/create-account.",
-      "defaultValue": null,
-      "type": "STRING"
-    }	
+}
     
   ],
   "dependencies": {
     "R": [
       {"name":"move"},
+      {"name":"move2"},
       {"name":"raster"},
       {"name":"sp"},
-      {"name":"rgdal"},
-      {"name":"ggmap"},
-      {"name":"OpenStreetMap"},
       {"name":"ggspatial"},
-      {"name":"plyr"},
-      {"name":"zip"},
-      {"name":"sf"}
+      {"name":"ggplot2"},
+      {"name":"sf"},
+      {"name":"scales"}
     ]
   },
   "createsArtifacts": true,

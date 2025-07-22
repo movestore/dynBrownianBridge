@@ -1,9 +1,10 @@
-{
-    "raster_resol":1000,
+{   "raster_resol":500,
     "loc.err":30,
-    "conts":"0.999",
-    "ext":100000,
+    "conts":"0.75, 0.999",
+    "ext":5000,
     "ignoreTimeHrs":6, 
     "colorBy":"both", 
-    "saveAsSHP":true
+    "saveAsSHP":true,
+    "mymtype":"osm",
+    "myzoom": 0
 }
