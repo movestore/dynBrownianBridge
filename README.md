@@ -65,6 +65,8 @@ move2::move2_loc
 
 **Save as Shapefile (`saveAsSHP`):** The specified contours of the UDs can be saved as shapefiles in a GeoPackage (GPKG) format. This option can also be unchecked.
 
+**Save as KML (`saveAsKML`):** The specified contours of the UDs can be saved as a KML file (compatible with GoogleEarth). This option can also be unchecked.
+
 ### Changes in output data
 The input data remains unchanged.
 

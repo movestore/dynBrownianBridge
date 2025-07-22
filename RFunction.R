@@ -18,6 +18,7 @@ library("prettymapr")
 # ignoreTimeHrs=6
 # colorBy= "both" #c("trackID", "contourLevel", "both")
 # saveAsSHP=F
+# saveAsKML=T
 # mymtype="osm"
 # myzoom= -1
 
@@ -35,7 +36,7 @@ library("prettymapr")
 ## For now just keep "osm" as map type as the others often give error and are not very informative. User can play with the zoom
 
 rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,ignoreTimeHrs=NULL, 
-                      colorBy=c("trackID", "contourLevel", "both"), saveAsSHP=TRUE,mymtype="osm",
+                      colorBy=c("trackID", "contourLevel", "both"), saveAsSHP=TRUE, saveAsKML=TRUE,mymtype="osm",
                       myzoom= -1){
   
   datamv <- moveStack(to_move(data))
@@ -103,6 +104,12 @@ rFunction <- function(data,raster_resol=10000,loc.err=30,conts=0.999,ext=20000,i
   if(saveAsSHP){
     UD_sldf_t_sf <- st_as_sf(UD_sldf_t)
     st_write(UD_sldf_t_sf, appArtifactPath(paste0("UD_contour_",paste0(cnts,collapse="_"),".gpkg")), driver = "GPKG", delete_dsn = TRUE)
+  }
+  
+  ###download UD as KML
+  if(saveAsKML){
+    UD_sldf_t_sf <- st_as_sf(UD_sldf_t)
+    st_write(UD_sldf_t_sf, appArtifactPath(paste0("UD_contour_",paste0(cnts,collapse="_"),".kml")), driver = "KML", delete_dsn = TRUE)
   }
   
   # convert to sf (sldf is deprecated in ggplot)

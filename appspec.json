@@ -85,6 +85,13 @@
   "description": "Select if you want the results to include a shapefile (GeoPackage (GPKG)) containing the calculated contours. ",
   "type": "CHECKBOX",
   "defaultValue": true
+},
+{
+  "id": "saveAsKML",
+  "name": "Save as KML",
+  "description": "Select if you want the results to include a KML (compatible with GoogleEarth) containing the calculated contours.",
+  "type": "CHECKBOX",
+  "defaultValue": true
 }
     
   ],

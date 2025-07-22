@@ -5,6 +5,7 @@
     "ignoreTimeHrs":6, 
     "colorBy":"both", 
     "saveAsSHP":true,
+    "saveAsKML":true,
     "mymtype":"osm",
     "myzoom": 0
 }
